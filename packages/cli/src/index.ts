@@ -1,7 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type ScaffoldResult, scaffold, type ValidationResult, validate } from '@cambia/core';
+import {
+  isEmptyTheme,
+  readFrontMatter,
+  renderTailwindTheme,
+  type ScaffoldResult,
+  scaffold,
+  type TailwindFormat,
+  tokensToTailwind,
+  type ValidationResult,
+  validate,
+} from '@cambia/core';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)); // packages/cli/dist
 const PKG_ROOT = path.join(HERE, '..');
@@ -24,6 +34,8 @@ keep using \`@google/design.md\` for the visual layer; \`cambia\` handles the la
 Usage:
   npx cambia init [--file DESIGN.md] [--dry-run]   Add a cambia: extension to a DESIGN.md
   npx cambia check [DESIGN.md]                     Validate the cambia: extension
+  npx cambia tailwind [--file DESIGN.md]           Generate a Tailwind theme from DESIGN.md tokens
+            [--out FILE] [--check FILE] [--format esm|cjs|json]
   npx cambia skill [claude|cursor]                 Install the agent skill/rule into your project
   npx cambia help                                  Show this help
   npx cambia --version                             Print the version
@@ -138,6 +150,77 @@ function runCheck(file: string): void {
   if (errors.length) process.exit(1);
 }
 
+interface TailwindFlags {
+  file: string;
+  out?: string;
+  check?: string;
+  format: TailwindFormat;
+}
+
+function parseTailwindFlags(list: string[]): TailwindFlags {
+  const flags: TailwindFlags = { file: 'DESIGN.md', format: 'esm' };
+  for (let i = 0; i < list.length; i++) {
+    if (list[i] === '--file') flags.file = list[++i];
+    else if (list[i] === '--out') flags.out = list[++i];
+    else if (list[i] === '--check') flags.check = list[++i];
+    else if (list[i] === '--format') flags.format = list[++i] as TailwindFormat;
+  }
+  return flags;
+}
+
+function runTailwind(args: string[]): void {
+  const flags = parseTailwindFlags(args);
+  if (!['esm', 'cjs', 'json'].includes(flags.format)) {
+    console.error(`✗ Unknown --format "${flags.format}". Use: esm | cjs | json`);
+    process.exit(1);
+  }
+  if (!fs.existsSync(flags.file)) {
+    console.error(`✗ ${flags.file} not found.`);
+    process.exit(1);
+  }
+
+  let rendered: string;
+  try {
+    const { frontMatter } = readFrontMatter(fs.readFileSync(flags.file, 'utf8'));
+    if (!frontMatter) {
+      console.error(`✗ ${flags.file} has no YAML front matter — is this a DESIGN.md?`);
+      process.exit(1);
+    }
+    const theme = tokensToTailwind(frontMatter);
+    if (isEmptyTheme(theme)) {
+      console.error(`✗ No design tokens (colors, spacing, rounded, typography) found in ${flags.file}.`);
+      process.exit(1);
+    }
+    rendered = renderTailwindTheme(theme, flags.format);
+  } catch (err) {
+    console.error(`✗ ${(err as Error).message}`);
+    process.exit(1);
+  }
+
+  // Drift check: re-generate from DESIGN.md and compare to a committed file.
+  if (flags.check) {
+    const existing = fs.existsSync(flags.check) ? fs.readFileSync(flags.check, 'utf8') : null;
+    if (existing === rendered) {
+      console.log(`✓ ${flags.check} is in sync with ${flags.file}.`);
+      return;
+    }
+    console.error(`✗ ${flags.check} has drifted from ${flags.file}'s tokens.`);
+    console.error(
+      `  Regenerate it: cambia tailwind --file ${flags.file} --out ${flags.check} --format ${flags.format}`
+    );
+    process.exit(1);
+  }
+
+  if (flags.out) {
+    fs.writeFileSync(flags.out, rendered);
+    console.log(`✓ Wrote Tailwind theme from ${flags.file} → ${flags.out}`);
+    console.log('  Use it in tailwind.config: `theme: cambiaTheme` (or spread `...cambiaTheme.extend`).');
+    return;
+  }
+
+  process.stdout.write(rendered);
+}
+
 const SKILL_TARGETS: Record<string, { src: string; dest: string }> = {
   claude: { src: path.join(ASSETS, 'skills/claude/SKILL.md'), dest: '.claude/skills/cambia/SKILL.md' },
   cursor: { src: path.join(ASSETS, 'skills/cursor/cambia.mdc'), dest: '.cursor/rules/cambia.mdc' },
@@ -173,6 +256,9 @@ try {
       break;
     case 'check':
       runCheck(args[0] && !args[0].startsWith('-') ? args[0] : 'DESIGN.md');
+      break;
+    case 'tailwind':
+      runTailwind(args);
       break;
     case 'skill':
       runSkill(args[0]);

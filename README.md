@@ -197,12 +197,24 @@ const { text } = scaffold(designMdText); // non-destructive: returns new file co
 
 ---
 
-## Known gaps
+## Tailwind bridge
 
-There is **no automatic DESIGN.md ↔ Tailwind bridge** today. Cambia validates the role
-layer but does not read or emit `tailwind.config`; keeping DESIGN.md tokens and a Tailwind
-theme aligned is currently manual (or the agent's job via the skill). A `cambia tailwind`
-codegen/drift-lint command is a natural future addition — see [`SPEC.md`](SPEC.md#known-gaps--roadmap).
+Generate a Tailwind theme from your DESIGN.md tokens (colors, spacing, `rounded`,
+typography) so the two never drift:
+
+```bash
+npx cambia tailwind --out cambia.theme.js          # generate (esm | cjs | json)
+npx cambia tailwind --check cambia.theme.js         # CI: fail if DESIGN.md drifted from the file
+```
+
+```js
+// tailwind.config.js
+import { cambiaTheme } from './cambia.theme.js';
+export default { theme: cambiaTheme /* { extend: { colors, spacing, borderRadius, fontSize, fontFamily } } */ };
+```
+
+`--check` re-generates from DESIGN.md and diffs it against the committed file, so a token
+change that wasn't regenerated fails CI. DESIGN.md stays the single source of truth.
 
 ---
 

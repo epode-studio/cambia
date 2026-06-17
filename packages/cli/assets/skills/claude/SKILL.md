@@ -16,6 +16,6 @@ When asked to create or modify any UI:
    - Honor `cambia.context.archetype` (e.g. analytics → favor density).
 4. If you need a role or component that isn't covered, **say so and propose adding it** to DESIGN.md / the `cambia:` block — don't hand-roll off-system UI.
 
-Note: DESIGN.md tokens are the single source of truth for visual values. There is no automatic Tailwind sync yet — if the project uses Tailwind, mirror the DESIGN.md tokens into the theme by hand and keep them aligned.
+Note: DESIGN.md tokens are the single source of truth for visual values. If the project uses Tailwind, generate the theme from DESIGN.md with `npx cambia tailwind --out cambia.theme.js` (and `npx cambia tailwind --check <file>` in CI) rather than hand-mirroring tokens.
 
 If there's no `cambia:` block, follow the DESIGN.md visual layer and offer to add roles. If there's no DESIGN.md at all, offer to create one (see `npx @google/design.md spec`).

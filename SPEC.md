@@ -77,11 +77,12 @@ to a DESIGN.md today, and it's the down payment on the entire roadmap.
 
 ## Known gaps & roadmap
 
-- **No DESIGN.md ↔ Tailwind bridge (yet).** Cambia validates the `cambia:` role layer and
-  cross-references components, but it does **not** read or emit `tailwind.config`. Keeping
-  DESIGN.md tokens and a Tailwind theme aligned is currently manual (or the agent's job via
-  the skill). A future `cambia tailwind` command — generate a Tailwind theme from DESIGN.md
-  tokens, and/or lint that the two haven't drifted — is a natural addition but is not built.
+- **DESIGN.md ↔ Tailwind bridge** — implemented via `cambia tailwind`: it generates a
+  Tailwind `theme` fragment from DESIGN.md tokens (colors, spacing, `rounded` → `borderRadius`,
+  typography → `fontSize`/`fontFamily`), and `--check` re-generates and diffs against a
+  committed file to catch drift in CI. The generator lives in `@cambia/core`
+  (`tokensToTailwind` / `renderTailwindTheme`). DESIGN.md remains the single source of truth;
+  the bridge does not yet parse a hand-written `tailwind.config.js` (it diffs the generated artifact).
 - **L1 adaptive runtime** — specified in [`docs/RFC-L1-adaptive-runtime.md`](docs/RFC-L1-adaptive-runtime.md)
   and **implemented** in [`@cambia/runtime`](packages/runtime) (with a React binding in
   [`@cambia/react`](packages/react)): born-adapted defaults that personalize per user on-device,
