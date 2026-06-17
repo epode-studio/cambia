@@ -469,10 +469,9 @@ const TAB_CODE = {
 };
 
 function Site({ engine, uid, profile, pid, setPid }) {
-  const [g, setG] = useState(false);
   const [tab, setTab] = useState('DESIGN.md');
   const [copied, setCopied] = useState(false);
-  /* the WHOLE page reads the live trait — its vertical rhythm personalizes with you */
+  /* the WHOLE page reads the live trait — spacing, examples, bloom all follow the active profile */
   const { values } = useCambia('tabular-list');
   const density = values.density || 'compact';
   const comfortable = density === 'comfortable';
@@ -489,10 +488,8 @@ function Site({ engine, uid, profile, pid, setPid }) {
     l.href =
       'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap';
     document.head.appendChild(l);
-    const iv = setInterval(() => setG((x) => !x), 3400);
     return () => {
       document.head.removeChild(l);
-      clearInterval(iv);
     };
   }, []);
 
@@ -507,10 +504,10 @@ function Site({ engine, uid, profile, pid, setPid }) {
   };
 
   const signals = [
-    ['density', 'user toggles comfortable / compact'],
-    ['default-sort', 'user clicks a column header'],
-    ['promoted-action', 'user invokes a row action'],
-    ['…any custom trait', 'whatever you pass to observe()'],
+    ['density', 'user toggles comfortable / compact', true],
+    ['default-sort', 'user clicks a column header', true],
+    ['promoted-action', 'user invokes a row action', false],
+    ['…any custom trait', 'whatever you pass to observe()', false],
   ];
   const steps = [
     ['#1 born-adapted', 'Tuned from the first render', 'Each component is matched to the app’s archetype before any interaction — analytics opens dense and recency-sorted; CRUD opens comfortable.'],
@@ -726,15 +723,22 @@ function Site({ engine, uid, profile, pid, setPid }) {
           <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
             Only the choices you pass it
           </h2>
-          <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 28px', maxWidth: 540 }}>
-            Each adaptive trait maps to one explicit signal. The engine has no global listeners.
+          <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 28px', maxWidth: 560 }}>
+            Each adaptive trait maps to one explicit signal — the engine has no global listeners. The two you just
+            changed, <span style={{ fontFamily: MONO, color: INK }}>density</span> and{' '}
+            <span style={{ fontFamily: MONO, color: INK }}>default-sort</span>, are signals; everything else stays conserved.
           </p>
         </Reveal>
         <Reveal delay={80}>
           <div style={{ border: `1px solid ${INK}`, maxWidth: 720 }}>
-            {signals.map(([trait, sig], i) => (
+            {signals.map(([trait, sig, inDemo], i) => (
               <div key={trait} className="flex items-center justify-between" style={{ padding: '14px 18px', borderBottom: i < signals.length - 1 ? `1px solid ${onPaper.line}` : 'none', gap: 16 }}>
-                <span style={{ fontFamily: MONO, fontSize: 13, color: BLUE, fontWeight: 600 }}>{trait}</span>
+                <span className="flex items-center" style={{ gap: 8 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 13, color: BLUE, fontWeight: 600 }}>{trait}</span>
+                  {inDemo ? (
+                    <span style={{ fontFamily: MONO, fontSize: 9.5, color: BLUE, border: `1px solid ${BLUE}`, padding: '1px 5px', textTransform: 'uppercase', letterSpacing: '.05em' }}>in the demo ↑</span>
+                  ) : null}
+                </span>
                 <span style={{ fontSize: 13.5, color: onPaper.sub, textAlign: 'right' }}>{sig}</span>
               </div>
             ))}
@@ -755,16 +759,16 @@ function Site({ engine, uid, profile, pid, setPid }) {
               The same engine, any interface
             </h2>
             <p style={{ fontSize: 15.5, color: onBlue.sub, margin: '16px 0 28px', maxWidth: 540 }}>
-              Not just tables. A dashboard, a form, a navigation, a feed — each adapts the traits you declared, and
-              nothing else. (Default ⇄ personalized, looping.)
+              Not just tables. A dashboard, a form, a navigation, a feed — each rendered for the profile you picked
+              above. Same declared design; the conserved layout never moves.
             </p>
           </Reveal>
           <div className="figs">
             {[
-              ['01', 'dashboard', 'Promotes the one metric this user opens; the rest recede.', <ExDashboard key="d" g={g} />],
-              ['02', 'form', 'Collapses advanced fields for users who never touch them.', <ExForm key="f" g={g} />],
-              ['03', 'navigation', 'Lifts the few destinations a user visits; files the rest under ‘More’.', <ExNav key="n" g={g} />],
-              ['04', 'feed', 'Switches between comfortable cards and a dense list to match how they scan.', <ExFeed key="e" g={g} />],
+              ['01', 'dashboard', 'Promotes the one metric this user opens; the rest recede.', <ExDashboard key="d" g={comfortable} />],
+              ['02', 'form', 'Collapses advanced fields for users who never touch them.', <ExForm key="f" g={comfortable} />],
+              ['03', 'navigation', 'Lifts the few destinations a user visits; files the rest under ‘More’.', <ExNav key="n" g={comfortable} />],
+              ['04', 'feed', 'Switches between comfortable cards and a dense list to match how they scan.', <ExFeed key="e" g={comfortable} />],
             ].map(([n, label, cap, node], i) => (
               <Reveal key={n} delay={(i % 2) * 100}>
                 <Card n={n} label={label} caption={cap}>
