@@ -38,6 +38,7 @@ const PROFILES = [
   { id: 'new', label: 'New user', seed: [] },
   { id: 'skimmer', label: 'Skimmer', seed: [['density', 'comfortable', 4]] },
   { id: 'analyst', label: 'Analyst', seed: [['default-sort', 'total', 4]] },
+  { id: 'personalized', label: 'Personalized', seed: [['density', 'comfortable', 4], ['default-sort', 'total', 4]] },
   { id: 'you', label: 'You', persistent: true, seed: [] },
 ];
 
@@ -468,6 +469,149 @@ const TAB_CODE = {
   ],
 };
 
+/* ── scrollytelling: a sticky 50/50 split. The sample on the right is a real
+      @cambia/runtime instance that transitions as you scroll the narrative. ── */
+const SAMPLE_ROWS = [
+  [1043, 'Aurora Labs', 2480, 'Paid'],
+  [1044, 'Bjørk Studio', 960, 'Refunded'],
+  [1045, 'Fjord Supply', 1205, 'Paid'],
+  [1046, 'Kestrel Co', 540, 'Pending'],
+];
+const sampleEngines = {};
+function sampleEngine(profileId) {
+  if (!sampleEngines[profileId]) {
+    const profile = PROFILES.find((p) => p.id === profileId) || PROFILES[0];
+    const engine = createCambia({ designMd: DEMO_DESIGN, userId: `sample-${profileId}`, switchMargin: 1.1 });
+    if (profile.seed?.length) {
+      const role = engine.role('tabular-list');
+      for (const [t, v, n] of profile.seed) for (let i = 0; i < n; i++) role.observe({ trait: t, value: v });
+    }
+    sampleEngines[profileId] = engine;
+  }
+  return sampleEngines[profileId];
+}
+
+function TableView({ density, sort }) {
+  const pad = density === 'comfortable' ? '13px 16px' : '7px 16px';
+  const money = (n) => `$${n.toLocaleString('en-US')}`;
+  const sorted = [...SAMPLE_ROWS].sort((a, b) => (sort === 'total' ? b[2] - a[2] : b[0] - a[0]));
+  const cols = [
+    ['Order', 'order'],
+    ['Customer', ''],
+    ['Total', 'total'],
+    ['Status', ''],
+  ];
+  return (
+    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+      <thead>
+        <tr style={{ borderBottom: `1px solid ${INK}` }}>
+          {cols.map(([h, key]) => {
+            const active = (key === 'total' && sort === 'total') || (key === 'order' && sort !== 'total');
+            return (
+              <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.06em', color: active ? BLUE : onPaper.faint, fontWeight: 600 }}>
+                {h}
+                {active ? ' ↓' : ''}
+              </th>
+            );
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map((r, i) => (
+          <tr key={r[0]} style={{ borderBottom: i < sorted.length - 1 ? `1px solid ${onPaper.line}` : 'none' }}>
+            <td style={{ padding: pad, fontFamily: MONO, color: onPaper.sub, transition: `padding .5s ${EASE}` }}>#{r[0]}</td>
+            <td style={{ padding: pad, fontWeight: 600, transition: `padding .5s ${EASE}` }}>{r[1]}</td>
+            <td style={{ padding: pad, fontVariantNumeric: 'tabular-nums', color: sort === 'total' ? BLUE : INK, transition: `padding .5s ${EASE}` }}>{money(r[2])}</td>
+            <td style={{ padding: pad, transition: `padding .5s ${EASE}` }}>
+              <span style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em', border: `1px solid ${INK}`, padding: '2px 7px' }}>{r[3]}</span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+const STEPS = [
+  { id: 'born', eyebrow: '01 · born-adapted', title: 'It ships already tuned to your app', body: 'Every component arrives matched to the app’s archetype — analytics opens dense and recency-sorted — before anyone has done a thing.', profile: 'new', view: 'table' },
+  { id: 'personalize', eyebrow: '02 · personalize', title: 'Then it learns each person', body: 'Forward the choices a user already makes through one observe() call. After a clear pattern, the trait switches — here, comfortable and sorted by total — and persists on the device.', profile: 'personalized', view: 'table' },
+  { id: 'person', eyebrow: '03 · per person', title: 'A different interface for each', body: 'The same declared design renders differently for every user. The conserved grammar — rows are records, sort by header — never moves.', profile: 'analyst', view: 'table' },
+  { id: 'any', eyebrow: '04 · any component', title: 'Not just tables', body: 'A dashboard, a form, a navigation — each adapts the traits you declared, and nothing else.', profile: 'personalized', view: 'dashboard' },
+  { id: 'device', eyebrow: '05 · on the device', title: 'Nothing leaves. forget() erases.', body: 'Per-user state lives in the browser — small per-trait tallies, no PII, no network. One call wipes it back to born-adapted.', profile: 'new', view: 'table' },
+];
+
+function StickySample({ step }) {
+  const values = sampleEngine(step.profile).role('tabular-list').values();
+  const density = values.density || 'compact';
+  const sort = values['default-sort'] === 'total' ? 'total' : '__recency__';
+  const prof = PROFILES.find((p) => p.id === step.profile);
+  return (
+    <div style={{ width: '100%', maxWidth: 470 }}>
+      <div className="flex items-center justify-between" style={{ marginBottom: 10, fontFamily: MONO, fontSize: 11, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+        <span>▦ live · @cambia/runtime</span>
+        <span style={{ color: BLUE }}>{prof?.label}</span>
+      </div>
+      <div style={{ border: `1px solid ${INK}`, background: WHITE, minHeight: 300 }}>
+        <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '10px 16px' }}>
+          <span style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+            {step.view === 'dashboard' ? 'dashboard · role: container' : 'data-table · role: tabular-list'}
+          </span>
+          <span style={{ fontFamily: MONO, fontSize: 11, color: BLUE }}>
+            {density}
+            {step.view === 'table' ? ` · ${sort === 'total' ? 'by total' : 'recency'}` : ''}
+          </span>
+        </div>
+        {step.view === 'dashboard' ? (
+          <div style={{ padding: 18 }}>
+            <ExDashboard g={density === 'comfortable'} />
+          </div>
+        ) : (
+          <TableView density={density} sort={sort} />
+        )}
+      </div>
+      <div style={{ marginTop: 10, fontFamily: MONO, fontSize: 10.5, color: onPaper.faint, lineHeight: 1.6 }}>
+        born-adapted compact · current <span style={{ color: BLUE }}>{density}</span> · conserved: rows-are-records, sort-by-header
+      </div>
+    </div>
+  );
+}
+
+function Scrolly() {
+  const [active, setActive] = useState(0);
+  const ref = useRef(null);
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const els = root.querySelectorAll('[data-step]');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(Number(e.target.getAttribute('data-step')));
+      },
+      { rootMargin: '-50% 0px -50% 0px', threshold: 0 }
+    );
+    for (const el of els) io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="scrolly">
+      <div className="scrolly-steps">
+        {STEPS.map((s, i) => (
+          <div key={s.id} data-step={i} className="scrolly-step">
+            <div style={{ opacity: active === i ? 1 : 0.32, transition: `opacity .4s ${EASE}` }}>
+              <div style={{ fontFamily: MONO, fontSize: 11.5, color: BLUE, textTransform: 'uppercase', letterSpacing: '.14em' }}>{s.eyebrow}</div>
+              <h2 className="feat-h" style={{ marginTop: 14, maxWidth: 440 }}>{s.title}</h2>
+              <p style={{ fontSize: 15.5, color: onPaper.sub, lineHeight: 1.6, marginTop: 14, maxWidth: 420 }}>{s.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="scrolly-sticky">
+        <StickySample step={STEPS[active]} />
+      </div>
+    </div>
+  );
+}
+
 function Site({ engine, uid, profile, pid, setPid }) {
   const [tab, setTab] = useState('DESIGN.md');
   const [copied, setCopied] = useState(false);
@@ -540,12 +684,18 @@ function Site({ engine, uid, profile, pid, setPid }) {
         .sec-h{ font-family:${SERIF}; font-weight:600; font-size:clamp(30px,4.4vw,54px); line-height:1.0; letter-spacing:-.015em; margin:0; text-wrap:balance; }
         .feat-h{ font-family:${SERIF}; font-weight:600; font-size:clamp(22px,2.6vw,31px); line-height:1.06; letter-spacing:-.01em; margin:0; text-wrap:balance; }
         .hero-grid{ display:grid; grid-template-columns:1fr; gap:36px; align-items:center; }
+        .scrolly{ display:flex; flex-direction:column; }
+        .scrolly-sticky{ order:-1; margin-bottom:20px; }
+        .scrolly-step{ min-height:58vh; display:flex; align-items:center; padding:24px 0; border-top:1px solid ${onPaper.line}; }
         .triptych{ display:grid; grid-template-columns:1fr; gap:34px; }
         .figs{ display:grid; grid-template-columns:1fr; gap:16px; }
         .pkgs{ display:grid; grid-template-columns:1fr; gap:1px; }
         .demo-grid{ display:grid; grid-template-columns:1fr; gap:30px; align-items:center; }
         @media (min-width:900px){
           .hero-grid{ grid-template-columns:1.08fr 0.92fr; gap:44px; }
+          .scrolly{ display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start; }
+          .scrolly-sticky{ order:0; margin-bottom:0; position:sticky; top:0; height:100vh; display:flex; align-items:center; }
+          .scrolly-step{ min-height:90vh; border-top:none; padding:0; }
           .triptych{ grid-template-columns:1fr 1fr 1fr; gap:28px; }
           .figs{ grid-template-columns:1fr 1fr; }
           .pkgs{ grid-template-columns:1fr 1fr; }
@@ -581,50 +731,48 @@ function Site({ engine, uid, profile, pid, setPid }) {
       </div>
 
       {/* hero */}
-      <div style={{ ...wrap, ...sx(44, 0) }}>
-        <div className="hero-grid">
-          <div>
-            <Reveal>
-              <Eyebrow color={BLUE}>Open source · MIT · a DESIGN.md extension</Eyebrow>
-            </Reveal>
-            <Reveal delay={80}>
-              <h1 className="h-hero" style={{ marginTop: 18 }}>
-                Interfaces that adapt to each user, on-device.
-              </h1>
-            </Reveal>
-            <Reveal delay={160}>
-              <p className="serif" style={{ fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(19px,2.2vw,27px)', color: INK, lineHeight: 1.34, margin: '22px 0 0', maxWidth: 500 }}>
-                The interface learns the person — privately, on their device.
-              </p>
-            </Reveal>
-            <Reveal delay={240}>
-              <div className="flex items-center" style={{ gap: 18, marginTop: 32, flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={copy}
-                  style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 18px', border: `1px solid ${BLUE}`, cursor: 'pointer' }}
-                >
-                  {copied ? 'copied ✓' : 'npx cambia init  ⧉'}
-                </button>
-                <a href="#try" style={{ fontFamily: MONO, fontSize: 13, color: INK, fontWeight: 600 }}>
-                  watch it adapt ↓
-                </a>
-              </div>
-            </Reveal>
+      <div style={{ ...wrap, paddingTop: 48, paddingBottom: 4 }}>
+        <Reveal>
+          <Eyebrow color={BLUE}>Open source · MIT · a DESIGN.md extension</Eyebrow>
+        </Reveal>
+        <Reveal delay={80}>
+          <h1 className="h-hero" style={{ marginTop: 18, maxWidth: 900 }}>
+            Interfaces that adapt to each user, on-device.
+          </h1>
+        </Reveal>
+        <Reveal delay={160}>
+          <p className="serif" style={{ fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(19px,2.2vw,27px)', color: INK, lineHeight: 1.34, margin: '22px 0 0', maxWidth: 560 }}>
+            The interface learns the person — privately, on their device.
+          </p>
+        </Reveal>
+        <Reveal delay={240}>
+          <div className="flex items-center" style={{ gap: 18, marginTop: 30, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={copy}
+              style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 18px', border: `1px solid ${BLUE}`, cursor: 'pointer' }}
+            >
+              {copied ? 'copied ✓' : 'npx cambia init  ⧉'}
+            </button>
+            <a href="#try" style={{ fontFamily: MONO, fontSize: 13, color: INK, fontWeight: 600 }}>
+              try it yourself ↓
+            </a>
           </div>
-          <Reveal delay={140}>
-            <GridBloom size={460} cols={44} grow={comfortable ? 1 : 0} />
-          </Reveal>
-        </div>
+        </Reveal>
+      </div>
+
+      {/* scrolly — sticky 50/50: the sample adapts as you scroll the narrative */}
+      <div style={{ ...wrap, paddingTop: 24 }}>
+        <Scrolly />
       </div>
 
       {/* LIVE — this page runs on cambia */}
       <div id="try" style={{ ...wrap, ...sx(70, 0) }}>
         <div className="demo-grid">
           <Reveal>
-            <Eyebrow color={BLUE}>§ this page runs on cambia</Eyebrow>
+            <Eyebrow color={BLUE}>§ now you try</Eyebrow>
             <h2 className="sec-h" style={{ marginTop: 14 }}>
-              One design, a different interface per person
+              Drive it yourself
             </h2>
             <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 0', maxWidth: 460, lineHeight: 1.55 }}>
               The table is a real <span style={{ fontFamily: MONO, color: INK }}>@cambia/runtime</span> instance. Switch{' '}
@@ -688,33 +836,6 @@ function Site({ engine, uid, profile, pid, setPid }) {
         </Reveal>
       </div>
 
-      {/* how it works — sharp blue block */}
-      <div style={{ background: BLUE, color: WHITE, marginTop: Math.round(72 * D), transition: `margin .6s ${EASE}` }}>
-        <div style={{ ...wrap, ...sx(58, 60) }}>
-          <Reveal>
-            <div className="flex items-center justify-between" style={{ marginBottom: 40, flexWrap: 'wrap', gap: 12 }}>
-              <h2 className="sec-h" style={{ maxWidth: 660 }}>
-                Born-adapted, then personalized
-              </h2>
-              <span style={{ fontFamily: MONO, fontSize: 11, color: WHITE, border: `1px solid ${WHITE}`, padding: '5px 10px', letterSpacing: '.08em' }}>LIVE ENGINE</span>
-            </div>
-          </Reveal>
-          <div className="triptych">
-            {steps.map(([tag, h, d], i) => (
-              <Reveal key={tag} delay={i * 100}>
-                <div style={{ borderTop: `1px solid ${WHITE}`, paddingTop: 18 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 11.5, color: WHITE, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 }}>{tag}</div>
-                  <div style={{ marginBottom: 14, maxWidth: 150 }}>
-                    <GridBloom size={150} cols={22} dark cycle={13} />
-                  </div>
-                  <h3 className="feat-h">{h}</h3>
-                  <p style={{ fontSize: 14.5, color: onBlue.sub, lineHeight: 1.6, margin: '12px 0 0' }}>{d}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* what it listens for — white */}
       <div style={{ ...wrap, ...sx(60, 58) }}>
@@ -750,35 +871,6 @@ function Site({ engine, uid, profile, pid, setPid }) {
         </Reveal>
       </div>
 
-      {/* across every interface — blue block, white cards */}
-      <div style={{ background: BLUE, color: WHITE }}>
-        <div style={{ ...wrap, ...sx(58, 58) }}>
-          <Reveal>
-            <Eyebrow color={onBlue.faint}>§ one engine, every component</Eyebrow>
-            <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
-              The same engine, any interface
-            </h2>
-            <p style={{ fontSize: 15.5, color: onBlue.sub, margin: '16px 0 28px', maxWidth: 540 }}>
-              Not just tables. A dashboard, a form, a navigation, a feed — each rendered for the profile you picked
-              above. Same declared design; the conserved layout never moves.
-            </p>
-          </Reveal>
-          <div className="figs">
-            {[
-              ['01', 'dashboard', 'Promotes the one metric this user opens; the rest recede.', <ExDashboard key="d" g={comfortable} />],
-              ['02', 'form', 'Collapses advanced fields for users who never touch them.', <ExForm key="f" g={comfortable} />],
-              ['03', 'navigation', 'Lifts the few destinations a user visits; files the rest under ‘More’.', <ExNav key="n" g={comfortable} />],
-              ['04', 'feed', 'Switches between comfortable cards and a dense list to match how they scan.', <ExFeed key="e" g={comfortable} />],
-            ].map(([n, label, cap, node], i) => (
-              <Reveal key={n} delay={(i % 2) * 100}>
-                <Card n={n} label={label} caption={cap}>
-                  {node}
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* privacy — white */}
       <div style={{ ...wrap, ...sx(60, 56) }}>
