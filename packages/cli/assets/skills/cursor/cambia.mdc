@@ -1,0 +1,12 @@
+---
+description: Build UI on-system using DESIGN.md + its Cambia extension
+globs: ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte"]
+alwaysApply: true
+---
+
+Before generating or editing any UI, read `DESIGN.md` at the project root and follow both layers:
+
+- **Visual (DESIGN.md tokens + prose):** build exactly to the colors, typography, spacing, rounding, and component styling.
+- **Cambia (`cambia:` block, if present):** use components for their mapped `role`; treat each role's `conserved` traits as fixed; only `adaptive` traits may vary; honor `cambia.context.archetype`.
+
+If something you need isn't covered, propose adding it to DESIGN.md / the `cambia:` block rather than hand-rolling off-system UI.

@@ -1,0 +1,42 @@
+{
+  "name": "@cambia/runtime",
+  "version": "0.1.0",
+  "description": "Cambia runtime — the live L1 adaptive engine. Born-adapted defaults that personalize per user on-device, never touching conserved traits.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "tsc && node --test \"dist/**/*.test.js\"",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@cambia/core": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.27",
+    "typescript": "^5"
+  },
+  "keywords": [
+    "cambia",
+    "design-system",
+    "adaptive-ui",
+    "personalization",
+    "on-device"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

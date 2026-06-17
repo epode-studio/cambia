@@ -1,0 +1,29 @@
+{
+  "name": "cambia-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cambia — a DESIGN.md extension that makes a design system role-aware and (optionally) adaptive.",
+  "workspaces": [
+    "packages/*",
+    "website"
+  ],
+  "scripts": {
+    "build": "bun run --filter='@cambia/core' build && bun run --filter='@cambia/runtime' build && bun run --filter='@cambia/react' build && bun run --filter='cambia' build",
+    "test": "bun run --filter='@cambia/core' test && bun run --filter='@cambia/runtime' test",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "prepare": "husky || true"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.15",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.3",
+    "typescript": "^5"
+  },
+  "license": "MIT"
+}

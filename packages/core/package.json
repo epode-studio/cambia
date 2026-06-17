@@ -1,0 +1,44 @@
+{
+  "name": "@cambia/core",
+  "version": "0.1.0",
+  "description": "Cambia core — read, scaffold, and validate the `cambia:` extension inside a DESIGN.md. Framework-zero, no I/O.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "tsc && node --test \"dist/**/*.test.js\"",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.19.27",
+    "typescript": "^5"
+  },
+  "keywords": [
+    "design.md",
+    "design-system",
+    "cambia",
+    "ai",
+    "agents",
+    "adaptive-ui"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

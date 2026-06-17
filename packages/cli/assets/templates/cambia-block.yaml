@@ -1,0 +1,36 @@
+# Reference shape for the Cambia extension block.
+# This lives inside a DESIGN.md's YAML front matter as a top-level `cambia:` key.
+# DESIGN.md's linter ignores it (custom keys are tolerated); `cambia` reads it.
+
+cambia:
+  version: "0.1"
+
+  # Optional. Lets components arrive pre-tuned to the kind of app (born-adapted).
+  context:
+    archetype: analytics        # analytics | crud | marketing | settings | ...
+
+  # Map each DESIGN.md component to a SEMANTIC ROLE, and declare which traits
+  # are fixed (conserved) vs allowed to personalize per user (adaptive).
+  roles:
+    primary-action:
+      component: button-primary  # must match a key under DESIGN.md `components:`
+      conserved: [position-top-right]
+      adaptive: []
+
+    tabular-list:
+      component: data-table
+      conserved: [rows-are-records, sort-by-header, id-pinned-left]
+      adaptive: [density, default-sort, promoted-action]
+
+    form-field:
+      component: field
+      conserved: [always-labeled]
+      adaptive: []
+
+# Canonical roles (prefer these for portability):
+#   primary-action, secondary-action, tabular-list, list,
+#   form-field, container, status, nav, feedback
+#
+# Conserved = the grammar the user learns (never moves).
+# Adaptive  = the only traits the runtime may personalize.
+# Default everything to conserved; opt traits into adaptive deliberately.

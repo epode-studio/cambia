@@ -1,0 +1,40 @@
+{
+  "name": "cambia",
+  "version": "0.1.0",
+  "description": "Cambia — a DESIGN.md extension that makes a design system role-aware and (optionally) adaptive. A living growth layer on top of DESIGN.md.",
+  "type": "module",
+  "bin": {
+    "cambia": "./bin/cambia.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "bin",
+    "assets"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@cambia/core": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.27",
+    "typescript": "^5"
+  },
+  "keywords": [
+    "design.md",
+    "design-system",
+    "cambia",
+    "ai",
+    "agents",
+    "adaptive-ui",
+    "cli"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
