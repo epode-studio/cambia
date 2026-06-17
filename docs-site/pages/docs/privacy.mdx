@@ -1,0 +1,60 @@
+---
+title: Privacy
+---
+
+import { Callout } from 'nextra/components'
+
+# Privacy
+
+Cambia's runtime personalizes interfaces **on the device**. This page states exactly what it stores,
+where, and how to erase it.
+
+## What is stored
+
+For each user, per role, per **adaptive** trait, a small estimate:
+
+- observed counts per option, e.g. `{ "comfortable": 5, "compact": 3 }`, and
+- the current chosen value, e.g. `"comfortable"`.
+
+That's all. **No** event log, no timestamps, no action history, no mouse/scroll/dwell tracking, and
+no PII beyond the `userId` *you* choose. Conserved traits are never stored. Keys look like
+`‹userId›:‹role›:‹trait›`.
+
+## Where it is stored
+
+Wherever the `store` you pass to `createCambia({ store })` puts it: in-memory by default
+(`createMemoryStore`), `localStorage` in the browser (`createLocalStorageStore`), or your own
+`{ get, set, remove }`.
+
+## What is transmitted
+
+<Callout type="info">
+  **Nothing.** No telemetry endpoint, no shared server, no network calls. Personalization never
+  leaves the device unless you sync your chosen store yourself.
+</Callout>
+
+## Erasure — `forget()`
+
+```ts
+const cambia = createCambia({ designMd, userId: 'alice', store })
+
+cambia.forget()        // erase this user: clear the store AND revert the live UI to born-adapted
+cambia.forget('bob')   // erase another user's persisted state in a shared store
+```
+
+After `forget()`, the user's estimates are deleted and every adaptive trait falls back to the
+born-adapted default. There is nothing else to delete.
+
+## GDPR posture
+
+Privacy-preserving by construction — but compliance is a property of *your* app:
+
+- **Data minimization** — only small per-trait tallies; no profiles, no logs.
+- **No transmission** — nothing leaves the device by default.
+- **Purpose limitation** — the data exists solely to choose a UI default.
+- **Right to erasure** — `forget()` deletes a user's state in one call.
+- **Your responsibility** — if you sync a real `userId`'s store to a backend, that becomes personal
+  data under your control (lawful basis, retention, access/erasure). The default local paths keep
+  it on-device and trivially erasable.
+
+This is engineering guidance, not legal advice — confirm specifics with your DPO.

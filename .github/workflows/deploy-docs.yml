@@ -1,0 +1,51 @@
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs-site/**'
+      - '.github/workflows/deploy-docs.yml'
+  pull_request:
+    paths:
+      - 'docs-site/**'
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Set CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID repo secrets and create a
+    # Cloudflare Pages project named `cambia-docs` to enable deploys. Until then this
+    # job skips gracefully (succeeds with a notice) instead of failing.
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip notice
+        if: env.CF_TOKEN == ''
+        run: echo "CLOUDFLARE_API_TOKEN not set — skipping docs deploy. Add it to enable."
+
+      - uses: oven-sh/setup-bun@v2
+        if: env.CF_TOKEN != ''
+        with:
+          bun-version: latest
+
+      - name: Install
+        if: env.CF_TOKEN != ''
+        run: bun install --frozen-lockfile
+
+      - name: Build docs
+        if: env.CF_TOKEN != ''
+        run: bun run --filter='@cambia/docs-site' build
+
+      - name: Deploy to Cloudflare Pages
+        if: env.CF_TOKEN != ''
+        run: bunx wrangler pages deploy docs-site/out --project-name=cambia-docs --branch=${{ github.head_ref || github.ref_name }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

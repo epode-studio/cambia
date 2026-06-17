@@ -1,0 +1,46 @@
+---
+title: Roles
+---
+
+# Roles
+
+A **role** maps a DESIGN.md component to a canonical, semantic name — what it *does* — so learning
+transfers across design systems and your agent picks the right component for the job.
+
+```yaml
+cambia:
+  roles:
+    tabular-list:
+      component: data-table        # must match a key under DESIGN.md components:
+      conserved: [rows-are-records, sort-by-header]
+      adaptive:  [density, default-sort]
+```
+
+## Canonical roles
+
+Prefer these for portability. Custom role names are allowed (`check` flags them as info, not error)
+but are less portable.
+
+| Role | Plays |
+| --- | --- |
+| `primary-action` | the main action (submit, create) |
+| `secondary-action` | supporting actions |
+| `tabular-list` | a table of records |
+| `list` | a non-tabular list |
+| `form-field` | a labeled input |
+| `container` | a card / panel / section |
+| `status` | a badge / tag / chip |
+| `nav` | navigation / menu / tabs |
+| `feedback` | toasts / alerts |
+
+## Conformance
+
+A Cambia extension is **valid** when `cambia.roles` is a map and every `component` it references
+exists in the DESIGN.md `components` block. `npx cambia check` enforces this and warns on traits
+listed as both conserved and adaptive, non-canonical role names, or an unfilled `TODO` scaffold.
+
+## Inference
+
+`npx cambia init` guesses roles from component names — e.g. `button*`/`*-cta` → `primary-action`,
+`*table*`/`*list*` → `tabular-list`, `*field*`/`*input*` → `form-field`. Always review the result;
+inference is a starting point, not the source of truth.

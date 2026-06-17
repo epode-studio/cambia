@@ -1,0 +1,48 @@
+---
+title: Spec
+---
+
+# Cambia × DESIGN.md — integration spec (v0.1)
+
+Cambia is an extension to Google's [DESIGN.md](https://github.com/google-labs-code/design.md).
+DESIGN.md describes how a design system **looks**; Cambia adds what components **do** (roles), what
+may **personalize per user** (adaptive), and a runtime that makes those layers live.
+
+## The `cambia:` block
+
+```yaml
+cambia:
+  version: "0.1"
+  context:
+    archetype: analytics
+  roles:
+    <role-name>:
+      component: <must match a DESIGN.md components key>
+      conserved: [<trait>, ...]   # the grammar — never moves
+      adaptive:  [<trait>, ...]   # the only traits the runtime may personalize
+```
+
+- **Roles** use canonical semantic names (see [Roles](/docs/roles)) so learning transfers.
+- **`component`** must resolve to a key in DESIGN.md's `components:` block.
+- **Default everything to conserved.** Adaptive is opt-in, trait by trait.
+
+## Conformance
+
+A Cambia extension is **valid** if `cambia.roles` is a map and every `component` it references
+exists in the DESIGN.md `components` block. `npx cambia check` enforces this and warns on traits
+listed as both conserved and adaptive, non-canonical role names, or an unfilled scaffold. The visual
+layer is validated separately by `npx @google/design.md lint` — the two tools are complementary.
+
+## How it rides inside DESIGN.md
+
+DESIGN.md preserves unknown sections and tolerates custom top-level keys. Cambia uses one top-level
+key, `cambia:`, in the YAML front matter, plus an optional `## Adaptation` section in the body for
+human rationale. A file with a `cambia:` block passes `@google/design.md lint` unchanged and is read
+more deeply by `cambia check`. One file, two readers.
+
+## Known gaps & roadmap
+
+- **Tailwind bridge** — implemented via `cambia tailwind` (generate + drift-check). Does not yet
+  parse a hand-written `tailwind.config.js` (it diffs the generated artifact).
+- **L1 adaptive runtime** — implemented in [`@cambia/runtime`](/docs/runtime) + `@cambia/react`.
+  Layers L2–L4 (cross-trait factors, shared learning, a user-owned cross-app genome) are future work.

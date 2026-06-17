@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --cambia-ink: #223843;
+  --cambia-paper: #eff1f3;
+  --cambia-dust: #dbd3d8;
+}
+
+html {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fraunces for headings + the logo wordmark */
+.nextra-content h1,
+.nextra-content h2,
+.nextra-content h3,
+.nextra-content h4 {
+  font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.01em;
+}
+
+.nextra-content h1 {
+  font-weight: 600;
+}
+
+/* Light theme tuned toward platinum/slate */
+html:not(.dark) body {
+  background: var(--cambia-paper);
+}
+
+/* Monospace inline + code blocks */
+.nextra-content code {
+  font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}

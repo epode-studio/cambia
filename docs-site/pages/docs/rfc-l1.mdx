@@ -1,0 +1,129 @@
+---
+title: 'RFC: L1 — The Adaptive Runtime'
+---
+
+# RFC: Cambia L1 — The Adaptive Runtime
+
+**Status:** Implemented in [`@cambia/runtime`](/docs/runtime) (+ [`@cambia/react`](/docs/react)) ·
+**Layer:** L1 (the first *running* layer) · **Depends on:** DESIGN.md + the `cambia:` extension (L0)
+
+## Summary
+
+L0 is description: a DESIGN.md plus a `cambia:` block declaring, per role, which traits are
+**conserved** and which are **adaptive**. This RFC specifies the runtime that makes the adaptive
+traits actually adapt — starting each user at a sensible default and personalizing on-device as they
+use the app, while never touching a conserved trait.
+
+It is deliberately the *simplest thing that is genuinely living*: one small estimator per adaptive
+trait, local-first, no server.
+
+## The loop
+
+On the client, for each role with adaptive traits:
+
+1. **Load** the user's local estimate for each adaptive trait — or, if none exists, the
+   **born-adapted prior** for the trait given `cambia.context.archetype`.
+2. **Apply** the current value to the component (via a hook).
+3. **Observe** signals as the user interacts (sort a column, toggle density, invoke an action).
+4. **Update** the estimate online and **persist** it locally.
+5. Conserved traits are never read, observed, or written.
+
+Born-adapted is step 1 with no history; personalization is steps 3–4 accumulating.
+
+## Data model
+
+Per `(user × role × adaptive-trait)`, a small estimate. For a discrete trait:
+
+- observed counts per option,
+- a prior as pseudo-counts (the born-adapted default, weighted by confidence),
+- a current value.
+
+This is a Dirichlet-multinomial estimate. New user → the prior dominates → born-adapted default. As
+observations accumulate → the user overcomes the prior → personalized.
+
+## The adaptation rule
+
+One rule, with an anti-thrash guard so the interface never flickers:
+
+```ts
+score(option) = prior[option] + observed[option]
+current value = the option with the highest score
+switch only if score(best) > score(current) × switchMargin   // e.g. 1.5
+```
+
+The `switchMargin` means a new winner must *clearly* beat the incumbent before the interface
+changes — one stray click never flips anything.
+
+## Born-adapted priors
+
+Priors come from a built-in table keyed by canonical trait × archetype:
+
+```yaml
+analytics:
+  density:      { compact: 3, comfortable: 1 }     # dense by default
+  default-sort: { __recency__: 2 }                  # newest first
+crud:
+  density:      { comfortable: 3, compact: 1 }
+```
+
+`cambia.context.archetype` selects the row; absent an archetype, a generic prior is used.
+
+## API
+
+```ts
+const cambia = createCambia({ designMd, userId, store })
+
+const role = cambia.role('tabular-list')
+role.values()                       // { density, defaultSort, promotedAction }
+role.observe({ trait: 'default-sort', value: 'createdAt' })
+```
+
+The React binding is one hook returning adapted values plus an `observe` callback. Conserved traits
+never appear in the hook, so they can't be adapted by construction.
+
+## Storage & privacy
+
+Per-user estimates persist **on-device**. **Nothing is transmitted by L1** — no telemetry endpoint,
+no shared genome. See [Privacy](/docs/privacy).
+
+## Reference implementation (the kernel)
+
+```ts
+type Counts = Record<string, number>
+
+class Trait {
+  current: string
+  constructor(
+    private prior: Counts,            // born-adapted prior (pseudo-counts)
+    private observed: Counts = {},
+    private switchMargin = 1.5,
+  ) {
+    this.current = argmax(prior)      // start born-adapted
+  }
+
+  value() { return this.current }
+
+  observe(option: string) {
+    this.observed[option] = (this.observed[option] ?? 0) + 1
+    const s = this.score()
+    const best = argmax(s)
+    if (best !== this.current && s[best] > s[this.current] * this.switchMargin) {
+      this.current = best             // switch only on clear, repeated signal
+    }
+  }
+
+  private score(): Counts {
+    const s: Counts = { ...this.prior }
+    for (const k in this.observed) s[k] = (s[k] ?? 0) + this.observed[k]
+    return s
+  }
+}
+```
+
+Born-adapted, personalizing, and thrash-proof — in one small class. That is the core of Cambia.
+
+## Forward-compatibility
+
+This runtime grows into the rest of Cambia without rework: L2 adds cross-trait / cross-role factors
+around the same estimator; later layers add structure (shared learning, a user-owned genome). At
+every step the L1 estimator is the kernel.

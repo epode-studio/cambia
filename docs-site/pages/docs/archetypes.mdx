@@ -1,0 +1,36 @@
+---
+title: Archetypes
+---
+
+# Archetypes
+
+An **archetype** tells the runtime what kind of app this is, so components arrive *born-adapted* —
+tuned to a sensible default before any user has done anything.
+
+```yaml
+cambia:
+  context:
+    archetype: analytics   # analytics | crud | marketing | settings | ...
+```
+
+## Born-adapted priors
+
+For each canonical adaptive trait, the runtime ships a small prior (pseudo-counts) keyed by
+archetype. A new user starts at the prior; observations move them away from it.
+
+```text
+analytics:
+  density:      { compact: 3, comfortable: 1 }   # dense by default
+  default-sort: { __recency__: 2 }                # newest first
+crud:
+  density:      { comfortable: 3, compact: 1 }
+```
+
+`cambia.context.archetype` selects the row. With no archetype (or an unset `TODO`), a generic prior
+is used — `cambia check` warns so you don't ship the placeholder by accident.
+
+## How priors and personalization relate
+
+Born-adapted defaults and per-user personalization are **the same estimator at two evidence
+levels** — the prior *is* the born-adapted default; the posterior is the personalized state. One
+mechanism delivers both. See the [L1 RFC](/docs/rfc-l1) for the full model.

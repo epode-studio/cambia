@@ -1,0 +1,87 @@
+---
+title: Getting started
+---
+
+import { Callout } from 'nextra/components'
+
+# Getting started
+
+Cambia rides inside a `DESIGN.md`. If you don't have one yet, create it first (see
+[`@google/design.md`](https://github.com/google-labs-code/design.md)). Then add the Cambia layer.
+
+## 1. Add a `cambia:` block
+
+```bash
+npx cambia init
+```
+
+`init` reads your DESIGN.md `components:`, infers semantic roles from their names, and **splices** a
+`cambia:` block into the front matter — non-destructively. It does not reformat the file or strip
+comments. Use `--dry-run` to preview the change without writing.
+
+The result looks like this:
+
+```yaml
+---
+name: Acme Orders
+components:
+  button-primary: { backgroundColor: "{colors.accent}" }
+  data-table:     { backgroundColor: "{colors.neutral}" }
+
+cambia:
+  version: "0.1"
+  context: { archetype: analytics }
+  roles:
+    primary-action: { component: button-primary, conserved: [position-top-right], adaptive: [] }
+    tabular-list:   { component: data-table, conserved: [rows-are-records, sort-by-header], adaptive: [density, default-sort] }
+---
+```
+
+<Callout type="info">
+  Review the inferred roles, set the `archetype`, and decide which traits are **adaptive** vs
+  **conserved**. Default everything to conserved; opt traits into adaptive deliberately.
+</Callout>
+
+## 2. Validate it
+
+```bash
+npx cambia check
+```
+
+`check` confirms every role's `component` exists in your DESIGN.md, flags traits listed as both
+conserved and adaptive, and notes non-canonical roles. It exits non-zero only on real errors —
+an unfilled scaffold is a warning, not a failure.
+
+## 3. Make it live
+
+Install the runtime and personalize the adaptive traits per user, on-device:
+
+```bash
+npm i @cambia/runtime @cambia/react
+```
+
+```tsx
+import { createCambia } from '@cambia/runtime'
+import { CambiaProvider, useCambia } from '@cambia/react'
+
+const cambia = createCambia({ designMd, userId })
+
+function OrdersTable() {
+  const { values, observe } = useCambia('tabular-list')
+  return (
+    <DataTable
+      density={values.density}
+      onDensityChange={(d) => observe({ trait: 'density', value: d })}
+    />
+  )
+}
+```
+
+See [the runtime](/docs/runtime) and [the React binding](/docs/react) for the full API.
+
+## 4. (Optional) wire your agent + Tailwind
+
+```bash
+npx cambia skill claude     # drop an agent rule so your AI reads both layers
+npx cambia tailwind --out cambia.theme.js   # generate a Tailwind theme from DESIGN.md tokens
+```

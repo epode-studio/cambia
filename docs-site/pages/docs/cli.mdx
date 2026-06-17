@@ -1,0 +1,65 @@
+---
+title: CLI
+---
+
+# `cambia` — the CLI
+
+```bash
+npx cambia <command>
+```
+
+| Command | What it does |
+| --- | --- |
+| `init` | add a `cambia:` block to a DESIGN.md (non-destructive) |
+| `check` | validate the `cambia:` extension |
+| `tailwind` | generate / drift-check a Tailwind theme from DESIGN.md tokens |
+| `skill` | install an agent rule (Claude / Cursor) into your project |
+
+Global flags: `--help` / `-h`, `--version` / `-v`.
+
+## `init`
+
+```bash
+npx cambia init [--file DESIGN.md] [--dry-run]
+```
+
+Reads `components:`, infers roles, and splices in a `cambia:` block **without** reformatting the
+file or stripping comments. `--dry-run` prints the would-be result without writing. If no roles can
+be inferred, it writes a `TODO` placeholder (a warning in `check`, not an error).
+
+## `check`
+
+```bash
+npx cambia check [DESIGN.md]
+```
+
+Validates that every role's `component` exists, that `conserved`/`adaptive` are lists, and warns on:
+traits in both lists, non-canonical roles, an unset archetype, or an unfilled scaffold. Exits `1`
+only on real errors.
+
+## `tailwind`
+
+```bash
+npx cambia tailwind [--file DESIGN.md] [--out FILE] [--check FILE] [--format esm|cjs|json]
+```
+
+Generates a Tailwind `theme` fragment from DESIGN.md tokens (colors, spacing, `rounded` →
+`borderRadius`, typography → `fontSize`/`fontFamily`).
+
+```bash
+npx cambia tailwind --out cambia.theme.js     # generate
+npx cambia tailwind --check cambia.theme.js   # CI: fail if DESIGN.md drifted from the file
+```
+
+`--check` re-generates and diffs against the committed file, so a token change that wasn't
+regenerated fails CI. DESIGN.md stays the single source of truth.
+
+## `skill`
+
+```bash
+npx cambia skill [claude|cursor]
+```
+
+Copies the bundled agent rule into your project — `.claude/skills/cambia/SKILL.md` or
+`.cursor/rules/cambia.mdc` — so your AI reads both the visual layer and the `cambia:` layer before
+generating UI. With no argument, installs both.

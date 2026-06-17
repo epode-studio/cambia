@@ -1,0 +1,73 @@
+---
+title: '@cambia/runtime'
+---
+
+import { Callout } from 'nextra/components'
+
+# `@cambia/runtime`
+
+The live, on-device engine. It reads the `cambia:` block, starts each adaptive trait at its
+born-adapted prior, and personalizes per user as you feed it usage signals — never touching a
+conserved trait.
+
+```bash
+npm i @cambia/runtime
+```
+
+## `createCambia(options)`
+
+```ts
+import { createCambia } from '@cambia/runtime'
+
+const cambia = createCambia({
+  designMd,            // DESIGN.md text containing a cambia: block
+  userId: 'alice',     // scopes the local state per user
+  store,               // optional; defaults to in-memory
+  switchMargin: 1.5,   // optional anti-thrash margin
+})
+```
+
+## Roles & values
+
+```ts
+const table = cambia.role('tabular-list')
+
+table.values()        // { density: 'compact', 'default-sort': '__recency__' }  (born-adapted)
+table.value('density')
+table.isAdaptive('rows-are-records')  // false — conserved traits aren't in the model
+
+table.observe({ trait: 'density', value: 'comfortable' })
+// after a clear, repeated pattern, values().density becomes 'comfortable' — for this user only
+```
+
+`observe()` for a conserved or unknown trait is a no-op. `role.subscribe(fn)` notifies on change
+(used by the React binding); `values()` returns a stable reference until something changes.
+
+## How adaptation works
+
+Each adaptive trait holds a small Dirichlet-multinomial estimate: a prior (the born-adapted default)
+plus observed counts. The current value is the option with the highest `prior + observed`, and it
+only switches when a new winner clearly beats the incumbent (`score(best) > score(current) ×
+switchMargin`) — so one stray signal never flips the UI. See the [L1 RFC](/docs/rfc-l1).
+
+## Erasure
+
+```ts
+cambia.forget()          // erase THIS user: clear the store + revert live UI to born-adapted
+cambia.forget('bob')     // erase another user's persisted state in a shared store
+```
+
+<Callout type="info">
+  Nothing is transmitted. Per-user state lives in the `store` you provide. See [Privacy](/docs/privacy).
+</Callout>
+
+## Stores
+
+```ts
+import { createMemoryStore, createLocalStorageStore } from '@cambia/runtime'
+
+createCambia({ designMd, userId, store: createLocalStorageStore() }) // browser
+```
+
+A store is `{ get, set, remove? }`. Bring your own to persist wherever you like — nothing leaves the
+device unless you sync it yourself.

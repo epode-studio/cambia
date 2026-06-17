@@ -1,0 +1,52 @@
+---
+title: '@cambia/react'
+---
+
+# `@cambia/react`
+
+The React binding for the runtime — one provider and one hook.
+
+```bash
+npm i @cambia/react @cambia/runtime
+```
+
+## Provider
+
+```tsx
+import { createCambia } from '@cambia/runtime'
+import { CambiaProvider } from '@cambia/react'
+
+const cambia = createCambia({ designMd, userId })
+
+function App() {
+  return (
+    <CambiaProvider value={cambia}>
+      <OrdersTable />
+    </CambiaProvider>
+  )
+}
+```
+
+## `useCambia(roleName)`
+
+```tsx
+import { useCambia } from '@cambia/react'
+
+function OrdersTable() {
+  const { values, observe } = useCambia('tabular-list')
+
+  return (
+    <DataTable
+      density={values.density}                          // adapted value
+      defaultSort={values['default-sort']}
+      onDensityChange={(d) => observe({ trait: 'density', value: d })}
+      onSortChange={(c) => observe({ trait: 'default-sort', value: c })}
+      // conserved traits (rows-are-records, sort-by-header, …) are fixed in the component
+    />
+  )
+}
+```
+
+`values` holds the born-adapted-then-personalized trait values; conserved traits never appear, so
+they can't be adapted. The component re-renders only when an adapted value actually changes
+(implemented with `useSyncExternalStore` over the role's subscription).

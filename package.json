@@ -5,7 +5,8 @@
   "description": "Cambia — a DESIGN.md extension that makes a design system role-aware and (optionally) adaptive.",
   "workspaces": [
     "packages/*",
-    "website"
+    "website",
+    "docs-site"
   ],
   "scripts": {
     "build": "bun run --filter='@cambia/core' build && bun run --filter='@cambia/runtime' build && bun run --filter='@cambia/react' build && bun run --filter='cambia' build",

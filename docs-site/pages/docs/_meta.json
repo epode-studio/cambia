@@ -1,0 +1,27 @@
+{
+  "index": "Introduction",
+  "getting-started": "Getting started",
+  "--- concepts": {
+    "type": "separator",
+    "title": "Concepts"
+  },
+  "concepts": "Overview",
+  "roles": "Roles",
+  "conserved-adaptive": "Conserved vs adaptive",
+  "archetypes": "Archetypes",
+  "--- packages": {
+    "type": "separator",
+    "title": "Packages"
+  },
+  "cli": "CLI",
+  "core": "@cambia/core",
+  "runtime": "@cambia/runtime",
+  "react": "@cambia/react",
+  "--- reference": {
+    "type": "separator",
+    "title": "Reference"
+  },
+  "privacy": "Privacy",
+  "spec": "Spec",
+  "rfc-l1": "RFC: L1 runtime"
+}

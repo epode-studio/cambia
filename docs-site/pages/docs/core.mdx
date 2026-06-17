@@ -1,0 +1,52 @@
+---
+title: '@cambia/core'
+---
+
+# `@cambia/core`
+
+Framework-zero library to read, scaffold, and validate the `cambia:` extension. No filesystem, no
+process, no I/O — pure functions you can embed in CI or your own tooling.
+
+```bash
+npm i @cambia/core
+```
+
+## `validate(text)`
+
+```ts
+import { validate } from '@cambia/core'
+
+const result = validate(designMdText)
+// → { hasFrontMatter, hasCambia, roleCount, errors[], warnings[], info[] }
+if (result.errors.length) process.exit(1)
+```
+
+Returns a result object; never throws on validation problems (only on unparseable YAML). Use it to
+gate CI.
+
+## `scaffold(text)`
+
+```ts
+import { scaffold } from '@cambia/core'
+
+const { text, mapped, unmapped, usedPlaceholder, alreadyPresent } = scaffold(designMdText)
+// `text` is the new file content — non-destructive (comments/format/CRLF preserved)
+```
+
+Builds a `cambia:` block and splices it in. Pure: returns the new string, does not touch disk.
+
+## `tokensToTailwind(frontMatter)` / `renderTailwindTheme(theme, format)`
+
+```ts
+import { readFrontMatter, tokensToTailwind, renderTailwindTheme } from '@cambia/core'
+
+const { frontMatter } = readFrontMatter(designMdText)
+const theme = tokensToTailwind(frontMatter)
+const file = renderTailwindTheme(theme, 'esm') // deterministic — stable for drift checks
+```
+
+## Front matter helpers
+
+- `readFrontMatter(text)` → `{ frontMatter, raw, body, eol }`
+- `spliceBlock(text, key, value)` → adds a top-level key non-destructively
+- `CANONICAL_ROLES`, `guessRole`, `defaultConserved`, `defaultAdaptive`

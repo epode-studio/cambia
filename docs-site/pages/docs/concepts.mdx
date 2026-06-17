@@ -1,0 +1,45 @@
+---
+title: Concepts
+---
+
+# Concepts
+
+Cambia is **not a competing file format.** It is an extension to Google's
+[DESIGN.md](https://github.com/google-labs-code/design.md). DESIGN.md describes how a design system
+**looks** (tokens + rationale). Cambia adds what components **do** (semantic roles), what may
+**personalize per user** (adaptive traits), and a runtime that makes those layers live.
+
+## The layer stack
+
+| Layer | Owned by | Lives in | Buys you |
+| --- | --- | --- | --- |
+| **L0 — visual identity** | DESIGN.md | front-matter tokens + prose | agent builds on-brand |
+| **L0.5 — semantic roles** | Cambia | `cambia.roles` in the same file | the right component for the job; conserved/adaptive declared |
+| **L1 — born-adapted + personalization** | `@cambia/runtime` | priors + on-device state | components tuned to the archetype, then to each user |
+| **L2+ — richer inference** | runtime (future) | on-device | cross-trait / cross-role factors |
+
+DESIGN.md owns L0. Cambia owns everything above it. You adopt DESIGN.md as-is and extend it.
+
+## How Cambia rides inside DESIGN.md
+
+DESIGN.md tolerates extension: it preserves unknown sections and stays silent on custom top-level
+keys. Cambia uses that on purpose.
+
+- **One top-level key, `cambia:`**, in the YAML front matter — the machine-readable layer.
+- **An optional `## Adaptation` section** in the markdown body — human rationale.
+
+A file with a `cambia:` block **passes `npx @google/design.md lint`** unchanged (the key is ignored)
+and is read more deeply by **`npx cambia check`**. One DESIGN.md, two readers.
+
+## Why roles are the hinge
+
+DESIGN.md says what a button *looks like*; a role says what plays "the primary action" and which of
+its traits are conserved vs adaptive. That semantic + conserved/adaptive layer is the foundation
+every higher layer (born-adapted, personalization) builds on — cheap to add today, the down payment
+on the whole roadmap.
+
+Read on:
+
+- [Roles](/docs/roles) — the canonical vocabulary
+- [Conserved vs adaptive](/docs/conserved-adaptive) — the core distinction
+- [Archetypes](/docs/archetypes) — born-adapted priors

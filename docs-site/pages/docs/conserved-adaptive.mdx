@@ -1,0 +1,47 @@
+---
+title: Conserved vs adaptive
+---
+
+import { Callout } from 'nextra/components'
+
+# Conserved vs adaptive
+
+Every role declares two trait lists. This is the core distinction in Cambia.
+
+- **`conserved`** — the grammar a user learns. It **never moves**. Tables always have rows as
+  records, sort by header, ID pinned left. These are not in the runtime's data model, so they can't
+  be adapted even in principle.
+- **`adaptive`** — the only traits the runtime may personalize per user, and only the ones you
+  list. Everything defaults to conserved; you opt traits into adaptive deliberately.
+
+```yaml
+tabular-list:
+  component: data-table
+  conserved: [rows-are-records, sort-by-header, id-pinned-left]
+  adaptive:  [density, default-sort, promoted-action]
+```
+
+<Callout type="warning">
+  A trait listed in **both** lists is a conflict — `cambia check` warns about it. Decide which one
+  it is.
+</Callout>
+
+## Why the split matters
+
+Personalization is only safe if the parts that make an interface *learnable* stay fixed. By making
+"what may change" an explicit, small, opt-in list — and keeping conserved traits structurally
+outside the engine — Cambia guarantees the grammar a user learned this morning is the same grammar
+this afternoon. Only the declared knobs drift.
+
+## Built-in adaptive traits
+
+The runtime ships drivers for common discrete traits:
+
+| Trait | Options | Updated by |
+| --- | --- | --- |
+| `density` | `comfortable`, `compact` | a density toggle |
+| `default-sort` | the table's columns | a sort event |
+| `promoted-action` | the row's actions | an action invocation |
+
+Custom traits supply their own option space and are fed via `observe()`. See
+[the runtime](/docs/runtime).
