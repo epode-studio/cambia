@@ -208,6 +208,7 @@ function LiveDemo({ profile, pid, setPid, onForget }) {
         </span>
       </div>
 
+      <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: `1px solid ${INK}` }}>
@@ -235,6 +236,7 @@ function LiveDemo({ profile, pid, setPid, onForget }) {
           ))}
         </tbody>
       </table>
+      </div>
 
       <div className="flex items-center" style={{ gap: 14, padding: '12px 14px', borderTop: `1px solid ${INK}`, flexWrap: 'wrap' }}>
         <div className="flex items-center" style={{ gap: 5 }}>
@@ -534,17 +536,30 @@ function TableView({ density, sort }) {
 
 const STEPS = [
   { id: 'born', eyebrow: '01 · born-adapted', title: 'It ships already tuned to your app', body: 'Every component arrives matched to the app’s archetype — analytics opens dense and recency-sorted — before anyone has done a thing.', profile: 'new', view: 'table' },
-  { id: 'personalize', eyebrow: '02 · personalize', title: 'Then it learns each person', body: 'Forward the choices a user already makes through one observe() call. After a clear pattern, the trait switches — here, comfortable and sorted by total — and persists on the device.', profile: 'personalized', view: 'table' },
+  { id: 'personalize', eyebrow: '02 · personalize', title: 'Then it learns each person', body: 'Forward the choices a user already makes through one observe() call. After a clear pattern the trait switches — here, comfortable and sorted by total — and persists on the device.', profile: 'personalized', view: 'table' },
   { id: 'person', eyebrow: '03 · per person', title: 'A different interface for each', body: 'The same declared design renders differently for every user. The conserved grammar — rows are records, sort by header — never moves.', profile: 'analyst', view: 'table' },
-  { id: 'any', eyebrow: '04 · any component', title: 'Not just tables', body: 'A dashboard, a form, a navigation — each adapts the traits you declared, and nothing else.', profile: 'personalized', view: 'dashboard' },
-  { id: 'device', eyebrow: '05 · on the device', title: 'Nothing leaves. forget() erases.', body: 'Per-user state lives in the browser — small per-trait tallies, no PII, no network. One call wipes it back to born-adapted.', profile: 'new', view: 'table' },
+  { id: 'dash', eyebrow: '04 · a dashboard', title: 'It promotes what you actually watch', body: 'Same engine, a different role. The metric this person opens leads; the rest recede.', profile: 'personalized', view: 'dashboard' },
+  { id: 'nav', eyebrow: '05 · a navigation', title: 'It lifts where you actually go', body: 'The few destinations someone visits rise to the top; the rest file under ‘More’.', profile: 'personalized', view: 'nav' },
+  { id: 'feed', eyebrow: '06 · a feed', title: 'It loosens or tightens to how you scan', body: 'Comfortable cards or a dense list — the same feed, fit to the reader.', profile: 'personalized', view: 'feed' },
+  { id: 'device', eyebrow: '07 · on the device', title: 'Nothing leaves. forget() erases.', body: 'Per-user state lives in the browser — small per-trait tallies, no PII, no network. One call wipes it back to born-adapted.', profile: 'new', view: 'table' },
 ];
+
+const SAMPLE_META = {
+  table: 'data-table · role: tabular-list',
+  dashboard: 'dashboard · role: container',
+  nav: 'navigation · role: nav',
+  feed: 'feed · role: list',
+  form: 'form · role: form-field',
+};
+const SAMPLE_COMP = { dashboard: ExDashboard, nav: ExNav, feed: ExFeed, form: ExForm };
 
 function StickySample({ step }) {
   const values = sampleEngine(step.profile).role('tabular-list').values();
   const density = values.density || 'compact';
   const sort = values['default-sort'] === 'total' ? 'total' : '__recency__';
+  const comf = density === 'comfortable';
   const prof = PROFILES.find((p) => p.id === step.profile);
+  const Comp = SAMPLE_COMP[step.view];
   return (
     <div style={{ width: '100%', maxWidth: 470 }}>
       <div className="flex items-center justify-between" style={{ marginBottom: 10, fontFamily: MONO, fontSize: 11, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' }}>
@@ -553,24 +568,24 @@ function StickySample({ step }) {
       </div>
       <div style={{ border: `1px solid ${INK}`, background: WHITE, minHeight: 300 }}>
         <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '10px 16px' }}>
-          <span style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em' }}>
-            {step.view === 'dashboard' ? 'dashboard · role: container' : 'data-table · role: tabular-list'}
-          </span>
+          <span style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em' }}>{SAMPLE_META[step.view] || SAMPLE_META.table}</span>
           <span style={{ fontFamily: MONO, fontSize: 11, color: BLUE }}>
             {density}
             {step.view === 'table' ? ` · ${sort === 'total' ? 'by total' : 'recency'}` : ''}
           </span>
         </div>
-        {step.view === 'dashboard' ? (
-          <div style={{ padding: 18 }}>
-            <ExDashboard g={density === 'comfortable'} />
-          </div>
-        ) : (
-          <TableView density={density} sort={sort} />
-        )}
+        <div style={{ overflowX: 'auto' }}>
+          {Comp ? (
+            <div style={{ padding: 16 }}>
+              <Comp g={comf} />
+            </div>
+          ) : (
+            <TableView density={density} sort={sort} />
+          )}
+        </div>
       </div>
       <div style={{ marginTop: 10, fontFamily: MONO, fontSize: 10.5, color: onPaper.faint, lineHeight: 1.6 }}>
-        born-adapted compact · current <span style={{ color: BLUE }}>{density}</span> · conserved: rows-are-records, sort-by-header
+        same declared design · current <span style={{ color: BLUE }}>{density}</span> · conserved grammar fixed
       </div>
     </div>
   );
@@ -685,8 +700,8 @@ function Site({ engine, uid, profile, pid, setPid }) {
         .feat-h{ font-family:${SERIF}; font-weight:600; font-size:clamp(22px,2.6vw,31px); line-height:1.06; letter-spacing:-.01em; margin:0; text-wrap:balance; }
         .hero-grid{ display:grid; grid-template-columns:1fr; gap:36px; align-items:center; }
         .scrolly{ display:flex; flex-direction:column; }
-        .scrolly-sticky{ order:-1; margin-bottom:20px; }
-        .scrolly-step{ min-height:58vh; display:flex; align-items:center; padding:24px 0; border-top:1px solid ${onPaper.line}; }
+        .scrolly-sticky{ order:-1; position:sticky; top:0; z-index:2; background:${WHITE}; padding:14px 0 14px; border-bottom:1px solid ${onPaper.line}; }
+        .scrolly-step{ min-height:46vh; display:flex; align-items:center; padding:22px 0; border-top:1px solid ${onPaper.line}; }
         .triptych{ display:grid; grid-template-columns:1fr; gap:34px; }
         .figs{ display:grid; grid-template-columns:1fr; gap:16px; }
         .pkgs{ display:grid; grid-template-columns:1fr; gap:1px; }
@@ -694,7 +709,7 @@ function Site({ engine, uid, profile, pid, setPid }) {
         @media (min-width:900px){
           .hero-grid{ grid-template-columns:1.08fr 0.92fr; gap:44px; }
           .scrolly{ display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start; }
-          .scrolly-sticky{ order:0; margin-bottom:0; position:sticky; top:0; height:100vh; display:flex; align-items:center; }
+          .scrolly-sticky{ order:0; position:sticky; top:0; height:100vh; display:flex; align-items:center; background:transparent; padding:0; border-bottom:none; z-index:auto; }
           .scrolly-step{ min-height:90vh; border-top:none; padding:0; }
           .triptych{ grid-template-columns:1fr 1fr 1fr; gap:28px; }
           .figs{ grid-template-columns:1fr 1fr; }
@@ -837,41 +852,6 @@ function Site({ engine, uid, profile, pid, setPid }) {
       </div>
 
 
-      {/* what it listens for — white */}
-      <div style={{ ...wrap, ...sx(60, 58) }}>
-        <Reveal>
-          <Eyebrow color={BLUE}>§ what it listens for</Eyebrow>
-          <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
-            Only the choices you pass it
-          </h2>
-          <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 28px', maxWidth: 560 }}>
-            Each adaptive trait maps to one explicit signal — the engine has no global listeners. The two you just
-            changed, <span style={{ fontFamily: MONO, color: INK }}>density</span> and{' '}
-            <span style={{ fontFamily: MONO, color: INK }}>default-sort</span>, are signals; everything else stays conserved.
-          </p>
-        </Reveal>
-        <Reveal delay={80}>
-          <div style={{ border: `1px solid ${INK}`, maxWidth: 720 }}>
-            {signals.map(([trait, sig, inDemo], i) => (
-              <div key={trait} className="flex items-center justify-between" style={{ padding: '14px 18px', borderBottom: i < signals.length - 1 ? `1px solid ${onPaper.line}` : 'none', gap: 16 }}>
-                <span className="flex items-center" style={{ gap: 8 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 13, color: BLUE, fontWeight: 600 }}>{trait}</span>
-                  {inDemo ? (
-                    <span style={{ fontFamily: MONO, fontSize: 9.5, color: BLUE, border: `1px solid ${BLUE}`, padding: '1px 5px', textTransform: 'uppercase', letterSpacing: '.05em' }}>in the demo ↑</span>
-                  ) : null}
-                </span>
-                <span style={{ fontSize: 13.5, color: onPaper.sub, textAlign: 'right' }}>{sig}</span>
-              </div>
-            ))}
-          </div>
-          <p style={{ fontSize: 14, color: onPaper.sub, marginTop: 16, lineHeight: 1.6, maxWidth: 620 }}>
-            Nothing else. <span style={{ color: INK, fontWeight: 600 }}>No mouse tracking, no scroll, no dwell time, no keystrokes</span> —
-            only the discrete choice you forward to <span style={{ fontFamily: MONO, color: BLUE }}>observe()</span>.
-          </p>
-        </Reveal>
-      </div>
-
-
       {/* privacy — white */}
       <div style={{ ...wrap, ...sx(60, 56) }}>
         <Reveal>
@@ -879,8 +859,10 @@ function Site({ engine, uid, profile, pid, setPid }) {
           <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
             Personalization that stays local
           </h2>
-          <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 30px', maxWidth: 600 }}>
-            GDPR-friendly by construction: the data barely exists, and it never leaves the device.
+          <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 30px', maxWidth: 640 }}>
+            GDPR-friendly by construction: the data barely exists, and it never leaves the device. It listens only to the
+            choices you pass <span style={{ fontFamily: MONO, color: INK }}>observe()</span> — no mouse, scroll, dwell, or
+            keystroke tracking.
           </p>
         </Reveal>
         <div className="triptych">
@@ -904,28 +886,8 @@ function Site({ engine, uid, profile, pid, setPid }) {
       <div style={{ background: BLUE, color: WHITE }}>
         <div style={{ ...wrap, ...sx(56, 60) }}>
           <Reveal>
-            <Eyebrow color={onBlue.faint}>§ tailwind, in sync</Eyebrow>
-            <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
-              One source of truth for tokens
-            </h2>
-            <div style={{ marginTop: 22, border: `1px solid ${WHITE}`, padding: '16px 18px', fontFamily: MONO, fontSize: 12.5, lineHeight: 1.9, maxWidth: 720, whiteSpace: 'pre', overflowX: 'auto' }}>
-              <div>
-                <span style={{ color: onBlue.faint }}>$ </span>npx cambia tailwind --out cambia.theme.js
-                <span style={{ color: onBlue.faint }}>{'   # DESIGN.md tokens → Tailwind'}</span>
-              </div>
-              <div>
-                <span style={{ color: onBlue.faint }}>$ </span>npx cambia tailwind --check cambia.theme.js
-                <span style={{ color: onBlue.faint }}>{'  # CI fails on drift'}</span>
-              </div>
-            </div>
-            <p style={{ fontSize: 14, color: onBlue.sub, margin: '14px 0 46px', lineHeight: 1.6, maxWidth: 620 }}>
-              Colors, spacing, radius and type are generated from DESIGN.md into Tailwind — not hand-mirrored — and
-              drift-checked in CI.
-            </p>
-          </Reveal>
-          <Reveal>
             <Eyebrow color={onBlue.faint}>§ four small packages</Eyebrow>
-            <h2 className="sec-h" style={{ margin: '14px 0 26px', maxWidth: 720 }}>
+            <h2 className="sec-h" style={{ marginTop: 14, marginBottom: 26, maxWidth: 720 }}>
               Declare it, then make it live
             </h2>
           </Reveal>
