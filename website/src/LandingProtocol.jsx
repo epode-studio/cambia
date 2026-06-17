@@ -28,21 +28,39 @@ cambia:
     tabular-list:
       component: data-table
       conserved: [rows-are-records, sort-by-header]
-      adaptive: [density]
+      adaptive: [density, default-sort]
 ---
 `;
 
-function makeCambia() {
-  let uid = 'visitor';
+/* Each profile is a real @cambia/runtime user. Seeded ones replay a little history so
+   they show a different personalized state; "You" persists in your browser. */
+const PROFILES = [
+  { id: 'new', label: 'New user', seed: [] },
+  { id: 'skimmer', label: 'Skimmer', seed: [['density', 'comfortable', 4]] },
+  { id: 'analyst', label: 'Analyst', seed: [['default-sort', 'total', 4]] },
+  { id: 'you', label: 'You', persistent: true, seed: [] },
+];
+
+function buildEngine(profile) {
+  let userId = `demo-${profile.id}`;
   let store;
-  try {
-    uid = localStorage.getItem('cambia-demo-uid') || `v-${Math.random().toString(36).slice(2, 8)}`;
-    localStorage.setItem('cambia-demo-uid', uid);
-    store = createLocalStorageStore('cambia-demo');
-  } catch {
-    /* SSR / no storage — in-memory fallback */
+  if (profile.persistent) {
+    try {
+      userId = localStorage.getItem('cambia-demo-uid') || `you-${Math.random().toString(36).slice(2, 7)}`;
+      localStorage.setItem('cambia-demo-uid', userId);
+      store = createLocalStorageStore('cambia-demo');
+    } catch {
+      /* no storage — in-memory */
+    }
   }
-  return { engine: createCambia({ designMd: DEMO_DESIGN, userId: uid, store, switchMargin: 1.1 }), uid };
+  const engine = createCambia({ designMd: DEMO_DESIGN, userId, store, switchMargin: 1.1 });
+  if (profile.seed?.length) {
+    const role = engine.role('tabular-list');
+    for (const [trait, value, n] of profile.seed) {
+      for (let i = 0; i < n; i++) role.observe({ trait, value });
+    }
+  }
+  return { engine, userId };
 }
 
 /* ── generative grid-cell bloom: procedural flower, opacity-only regrow loop. ── */
@@ -84,7 +102,7 @@ function buildBloom(cols, rnd) {
   return { cells };
 }
 
-function GridBloom({ size = 420, cols = 46, dark = false, cycle = 11 }) {
+function GridBloom({ size = 420, cols = 46, dark = false, cycle = 11, grow = 0 }) {
   const seed = useRef(Math.random());
   const { cells } = useMemo(() => {
     let s = ((seed.current * 9973) | 0) || 7;
@@ -100,7 +118,12 @@ function GridBloom({ size = 420, cols = 46, dark = false, cycle = 11 }) {
   const cGrid = dark ? onBlue.line : onPaper.line;
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} width="100%" style={{ display: 'block', overflow: 'visible' }} aria-hidden="true">
+    <svg
+      viewBox={`0 0 ${size} ${size}`}
+      width="100%"
+      style={{ display: 'block', overflow: 'visible', transform: `scale(${0.97 + grow * 0.17})`, transformOrigin: 'center', transition: `transform .9s ${EASE}` }}
+      aria-hidden="true"
+    >
       <title>generative bloom</title>
       {Array.from({ length: cols + 1 }).map((_, i) =>
         i % 6 === 0 ? (
@@ -131,61 +154,79 @@ function GridBloom({ size = 420, cols = 46, dark = false, cycle = 11 }) {
 }
 
 /* ── the LIVE demo: a real table driven by @cambia/runtime, scoped to this visitor ── */
-function LiveDemo({ uid, onForget }) {
+function LiveDemo({ profile, pid, setPid, onForget }) {
   const { values, observe } = useCambia('tabular-list');
-  const [clicks, setClicks] = useState(0);
   const density = values.density || 'compact';
+  const sort = values['default-sort'] === 'total' ? 'total' : '__recency__';
   const comfortable = density === 'comfortable';
   const rows = [
-    ['#1043', 'Aurora Labs', '$2,480', 'Paid'],
-    ['#1044', 'Bjørk Studio', '$960', 'Refunded'],
-    ['#1045', 'Fjord Supply', '$1,205', 'Paid'],
-    ['#1046', 'Kestrel Co', '$540', 'Pending'],
+    [1043, 'Aurora Labs', 2480, 'Paid'],
+    [1044, 'Bjørk Studio', 960, 'Refunded'],
+    [1045, 'Fjord Supply', 1205, 'Paid'],
+    [1046, 'Kestrel Co', 540, 'Pending'],
   ];
+  const sorted = [...rows].sort((a, b) => (sort === 'total' ? b[2] - a[2] : b[0] - a[0]));
   const cellPad = comfortable ? '13px 14px' : '6px 14px';
-  const pick = (d) => {
-    observe({ trait: 'density', value: d });
-    setClicks((c) => c + 1);
-  };
-  const reset = () => {
-    onForget();
-    setClicks(0);
-  };
-  const btn = (active, muted) => ({
+  const money = (n) => `$${n.toLocaleString('en-US')}`;
+  const chip = (active, muted) => ({
     fontFamily: MONO,
-    fontSize: 12,
-    padding: '8px 12px',
+    fontSize: 11.5,
+    padding: '6px 10px',
     cursor: 'pointer',
-    border: `1px solid ${muted ? onPaper.line : INK}`,
+    border: `1px solid ${muted ? onPaper.line : active ? BLUE : INK}`,
     background: active ? BLUE : WHITE,
     color: active ? WHITE : muted ? onPaper.sub : INK,
     textTransform: 'uppercase',
-    letterSpacing: '.04em',
+    letterSpacing: '.03em',
+    transition: `all .2s ${EASE}`,
   });
+  const lbl = { fontFamily: MONO, fontSize: 10, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' };
+  const cols = [
+    ['Order', 'order'],
+    ['Customer', ''],
+    ['Total', 'total'],
+    ['Status', ''],
+  ];
 
   return (
     <div style={{ border: `1px solid ${INK}`, background: WHITE }}>
-      <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '11px 16px', flexWrap: 'wrap', gap: 8 }}>
+      {/* profile switcher */}
+      <div className="flex items-center" style={{ borderBottom: `1px solid ${INK}`, padding: '10px 12px', gap: 6, flexWrap: 'wrap' }}>
+        <span style={{ ...lbl, marginRight: 2 }}>profile</span>
+        {PROFILES.map((p) => (
+          <button key={p.id} type="button" style={chip(pid === p.id)} onClick={() => setPid(p.id)}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '10px 16px', flexWrap: 'wrap', gap: 8 }}>
         <span style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em' }}>data-table · role: tabular-list</span>
-        <span style={{ fontFamily: MONO, fontSize: 11, color: BLUE }}>density = {density}</span>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: BLUE }}>
+          {density} · {sort === 'total' ? 'by total' : 'recency'}
+        </span>
       </div>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: `1px solid ${INK}` }}>
-            {['Order', 'Customer', 'Total', 'Status'].map((h) => (
-              <th key={h} style={{ textAlign: 'left', padding: '8px 14px', fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.06em', color: onPaper.faint, fontWeight: 600 }}>
-                {h}
-              </th>
-            ))}
+            {cols.map(([h, key]) => {
+              const active = (key === 'total' && sort === 'total') || (key === 'order' && sort !== 'total');
+              return (
+                <th key={h} style={{ textAlign: 'left', padding: '8px 14px', fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.06em', color: active ? BLUE : onPaper.faint, fontWeight: 600 }}>
+                  {h}
+                  {active ? ' ↓' : ''}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
-          {rows.map((r, i) => (
-            <tr key={r[0]} style={{ borderBottom: i < rows.length - 1 ? `1px solid ${onPaper.line}` : 'none' }}>
-              <td style={{ padding: cellPad, fontFamily: MONO, color: onPaper.sub, transition: `padding .5s ${EASE}` }}>{r[0]}</td>
+          {sorted.map((r, i) => (
+            <tr key={r[0]} style={{ borderBottom: i < sorted.length - 1 ? `1px solid ${onPaper.line}` : 'none' }}>
+              <td style={{ padding: cellPad, fontFamily: MONO, color: onPaper.sub, transition: `padding .5s ${EASE}` }}>#{r[0]}</td>
               <td style={{ padding: cellPad, fontWeight: 600, transition: `padding .5s ${EASE}` }}>{r[1]}</td>
-              <td style={{ padding: cellPad, fontVariantNumeric: 'tabular-nums', transition: `padding .5s ${EASE}` }}>{r[2]}</td>
+              <td style={{ padding: cellPad, fontVariantNumeric: 'tabular-nums', color: sort === 'total' ? BLUE : INK, transition: `padding .5s ${EASE}` }}>{money(r[2])}</td>
               <td style={{ padding: cellPad, transition: `padding .5s ${EASE}` }}>
                 <span style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em', border: `1px solid ${INK}`, padding: '2px 6px' }}>{r[3]}</span>
               </td>
@@ -194,22 +235,34 @@ function LiveDemo({ uid, onForget }) {
         </tbody>
       </table>
 
-      <div className="flex items-center" style={{ gap: 8, padding: '12px 14px', borderTop: `1px solid ${INK}`, flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em', marginRight: 4 }}>you choose:</span>
-        <button type="button" style={btn(!comfortable)} onClick={() => pick('compact')}>
-          compact
-        </button>
-        <button type="button" style={btn(comfortable)} onClick={() => pick('comfortable')}>
-          comfortable
-        </button>
-        <button type="button" style={{ ...btn(false, true), marginLeft: 'auto' }} onClick={reset}>
-          forget me
+      <div className="flex items-center" style={{ gap: 14, padding: '12px 14px', borderTop: `1px solid ${INK}`, flexWrap: 'wrap' }}>
+        <div className="flex items-center" style={{ gap: 5 }}>
+          <span style={{ ...lbl, marginRight: 2 }}>density</span>
+          <button type="button" style={chip(!comfortable)} onClick={() => observe({ trait: 'density', value: 'compact' })}>
+            compact
+          </button>
+          <button type="button" style={chip(comfortable)} onClick={() => observe({ trait: 'density', value: 'comfortable' })}>
+            comfortable
+          </button>
+        </div>
+        <div className="flex items-center" style={{ gap: 5 }}>
+          <span style={{ ...lbl, marginRight: 2 }}>sort</span>
+          <button type="button" style={chip(sort !== 'total')} onClick={() => observe({ trait: 'default-sort', value: '__recency__' })}>
+            recency
+          </button>
+          <button type="button" style={chip(sort === 'total')} onClick={() => observe({ trait: 'default-sort', value: 'total' })}>
+            total
+          </button>
+        </div>
+        <button type="button" style={{ ...chip(false, true), marginLeft: 'auto' }} onClick={onForget}>
+          forget
         </button>
       </div>
 
       <div style={{ borderTop: `1px solid ${onPaper.line}`, padding: '10px 14px', fontFamily: MONO, fontSize: 11, color: onPaper.faint, lineHeight: 1.7 }}>
-        born-adapted: <span style={{ color: INK }}>compact</span> (analytics) · current: <span style={{ color: BLUE }}>{density}</span> · observations: {clicks} ·{' '}
-        user <span style={{ color: INK }}>{uid}</span> · stored in your browser
+        profile <span style={{ color: INK }}>{profile.label}</span> · density <span style={{ color: BLUE }}>{density}</span> · sort{' '}
+        <span style={{ color: BLUE }}>{sort === 'total' ? 'total' : 'recency'}</span> ·{' '}
+        {profile.persistent ? 'saved in your browser' : 'in-memory'} · the whole page renders as this profile ↑
       </div>
     </div>
   );
@@ -415,7 +468,7 @@ const TAB_CODE = {
   ],
 };
 
-function Site({ engine, uid }) {
+function Site({ engine, uid, profile, pid, setPid }) {
   const [g, setG] = useState(false);
   const [tab, setTab] = useState('DESIGN.md');
   const [copied, setCopied] = useState(false);
@@ -521,7 +574,7 @@ function Site({ engine, uid }) {
                 transition: `all .4s ${EASE}`,
               }}
             >
-              ▦ adapting to you · {density}
+              ▦ {profile?.persistent ? 'adapting to you' : `as ${profile?.label?.toLowerCase()}`} · {density}
             </span>
             <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md">spec</a>
             <a href="https://github.com/epode-studio/cambia/tree/main/docs-site">docs</a>
@@ -543,74 +596,99 @@ function Site({ engine, uid }) {
               </h1>
             </Reveal>
             <Reveal delay={160}>
-              <p style={{ fontSize: 17, color: onPaper.sub, lineHeight: 1.5, margin: '22px 0 0', maxWidth: 520 }}>
-                A runtime that personalizes the UI per person, locally. You declare which traits may adapt; conserved
-                layout never moves. Nothing leaves the device.
+              <p className="serif" style={{ fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(19px,2.2vw,27px)', color: INK, lineHeight: 1.34, margin: '22px 0 0', maxWidth: 500 }}>
+                The interface learns the person — privately, on their device.
               </p>
             </Reveal>
             <Reveal delay={240}>
-              <div style={{ marginTop: 30 }}>
-                <Eyebrow color={onPaper.faint}>Install</Eyebrow>
+              <div className="flex items-center" style={{ gap: 18, marginTop: 32, flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={copy}
-                  className="flex items-center justify-between"
-                  style={{ width: '100%', maxWidth: 460, marginTop: 12, border: `1px solid ${INK}`, background: WHITE, padding: '13px 16px', gap: 12, cursor: 'pointer', color: INK }}
+                  style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 18px', border: `1px solid ${BLUE}`, cursor: 'pointer' }}
                 >
-                  <span style={{ fontFamily: MONO, fontSize: 13.5 }}>npx cambia init</span>
-                  <span style={{ fontFamily: MONO, fontSize: 12, color: copied ? BLUE : onPaper.faint }}>{copied ? 'copied ✓' : '⧉ copy'}</span>
+                  {copied ? 'copied ✓' : 'npx cambia init  ⧉'}
                 </button>
-                <div className="flex items-center" style={{ gap: 6, marginTop: 16, flexWrap: 'wrap' }}>
-                  {Object.keys(TAB_CODE).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setTab(t)}
-                      style={{ cursor: 'pointer', border: `1px solid ${INK}`, background: tab === t ? BLUE : WHITE, color: tab === t ? WHITE : INK, padding: '6px 12px', fontFamily: MONO, fontSize: 11.5, transition: `all .2s ${EASE}` }}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ marginTop: 12, maxWidth: 520, border: `1px solid ${INK}`, background: '#FAFAFB', padding: '14px 16px', fontFamily: MONO, fontSize: 12, lineHeight: 1.85, whiteSpace: 'pre', overflowX: 'auto' }}>
-                  {TAB_CODE[tab].map(([text, color]) => (
-                    <div key={text} style={{ color }}>
-                      {text}
-                    </div>
-                  ))}
-                </div>
+                <a href="#try" style={{ fontFamily: MONO, fontSize: 13, color: INK, fontWeight: 600 }}>
+                  watch it adapt ↓
+                </a>
               </div>
             </Reveal>
           </div>
           <Reveal delay={140}>
-            <GridBloom size={440} cols={44} />
+            <GridBloom size={460} cols={44} grow={comfortable ? 1 : 0} />
           </Reveal>
         </div>
       </div>
 
       {/* LIVE — this page runs on cambia */}
-      <div style={{ ...wrap, ...sx(70, 0) }}>
+      <div id="try" style={{ ...wrap, ...sx(70, 0) }}>
         <div className="demo-grid">
           <Reveal>
             <Eyebrow color={BLUE}>§ this page runs on cambia</Eyebrow>
             <h2 className="sec-h" style={{ marginTop: 14 }}>
-              Don’t take our word for it
+              One design, a different interface per person
             </h2>
             <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 0', maxWidth: 460, lineHeight: 1.55 }}>
-              The table on the right is driven by <span style={{ fontFamily: MONO, color: INK }}>@cambia/runtime</span>,
-              scoped to you. It’s born-adapted <strong>compact</strong> (analytics archetype). Pick{' '}
-              <strong>comfortable</strong> a few times — once the pattern is clear (anti-thrash), it switches and
-              persists in your browser. Reload: it remembers. The conserved grammar — rows are records, sort by header —
-              never changes. <span style={{ fontFamily: MONO, color: INK }}>forget me</span> wipes it.
+              The table is a real <span style={{ fontFamily: MONO, color: INK }}>@cambia/runtime</span> instance. Switch{' '}
+              <strong>profiles</strong> — each is its own user: the <strong>New user</strong> is born-adapted (compact,
+              recency), the <strong>Analyst</strong> sorts by total, the <strong>Skimmer</strong> wants room. Same
+              declared design; the conserved grammar — rows are records, sort by header — never moves.
             </p>
             <p style={{ fontSize: 13, color: onPaper.faint, marginTop: 14, lineHeight: 1.5 }}>
-              The whole page is wired to the same trait — watch its spacing breathe when the table switches.
+              Personalize any profile with the controls — the <strong>whole page</strong> re-renders as that person
+              (spacing, the bloom, the chip). <span style={{ fontFamily: MONO, color: INK }}>You</span> is saved in your
+              browser; reload and it remembers.
             </p>
           </Reveal>
           <Reveal delay={120}>
-            <LiveDemo uid={uid} onForget={() => engine.forget()} />
+            <LiveDemo profile={profile} pid={pid} setPid={setPid} onForget={() => engine.forget()} />
           </Reveal>
         </div>
+      </div>
+
+      {/* add one block — the install / code */}
+      <div style={{ ...wrap, ...sx(64, 0) }}>
+        <Reveal>
+          <Eyebrow color={BLUE}>§ add one block</Eyebrow>
+          <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 680 }}>
+            One block on the DESIGN.md you already have
+          </h2>
+          <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 24px', maxWidth: 540 }}>
+            <span style={{ fontFamily: MONO, color: INK }}>cambia init</span> adds it non-destructively — your agent
+            reads it, your components carry it. You declare what may adapt; conserved layout never moves.
+          </p>
+        </Reveal>
+        <Reveal delay={80}>
+          <button
+            type="button"
+            onClick={copy}
+            className="flex items-center justify-between"
+            style={{ width: '100%', maxWidth: 520, border: `1px solid ${INK}`, background: WHITE, padding: '13px 16px', gap: 12, cursor: 'pointer', color: INK }}
+          >
+            <span style={{ fontFamily: MONO, fontSize: 13.5 }}>npx cambia init</span>
+            <span style={{ fontFamily: MONO, fontSize: 12, color: copied ? BLUE : onPaper.faint }}>{copied ? 'copied ✓' : '⧉ copy'}</span>
+          </button>
+          <div className="flex items-center" style={{ gap: 6, marginTop: 16, flexWrap: 'wrap' }}>
+            {Object.keys(TAB_CODE).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                style={{ cursor: 'pointer', border: `1px solid ${INK}`, background: tab === t ? BLUE : WHITE, color: tab === t ? WHITE : INK, padding: '6px 12px', fontFamily: MONO, fontSize: 11.5, transition: `all .2s ${EASE}` }}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, maxWidth: 720, border: `1px solid ${INK}`, background: '#FAFAFB', padding: '16px 18px', fontFamily: MONO, fontSize: 12.5, lineHeight: 1.9, whiteSpace: 'pre', overflowX: 'auto' }}>
+            {TAB_CODE[tab].map(([text, color]) => (
+              <div key={text} style={{ color }}>
+                {text}
+              </div>
+            ))}
+          </div>
+        </Reveal>
       </div>
 
       {/* how it works — sharp blue block */}
@@ -804,10 +882,14 @@ function Site({ engine, uid }) {
 }
 
 export default function App() {
-  const [{ engine, uid }] = useState(() => makeCambia());
+  const cache = useRef({});
+  const [pid, setPid] = useState('new');
+  const profile = PROFILES.find((p) => p.id === pid) || PROFILES[0];
+  if (!cache.current[pid]) cache.current[pid] = buildEngine(profile);
+  const { engine, userId } = cache.current[pid];
   return (
     <CambiaProvider value={engine}>
-      <Site engine={engine} uid={uid} />
+      <Site engine={engine} uid={userId} profile={profile} pid={pid} setPid={setPid} />
     </CambiaProvider>
   );
 }
