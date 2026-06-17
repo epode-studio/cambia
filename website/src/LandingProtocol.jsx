@@ -1,19 +1,63 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /* ── classical-modern editorial: warm ivory + ink + a botanical green tied to the
-      name (cambium = a tree's living growth layer). Bold Didone serif, mono labels,
-      inverted ink sections, italic-serif accents. Our own palette — not a copy. ── */
+      name (cambium = a tree's living growth layer). Fraunces display serif (legible,
+      bold), mono labels, inverted ink sections. Our own palette — not a copy. ── */
 const PAPER = '#F1ECE0';
 const INK = '#191B12';
 const GREEN = '#2E6F4B';
-const GREEN_BRIGHT = '#3E9D6B';
+const GREEN_BRIGHT = '#4FAE7B';
 const MONO = "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace";
+const EASE = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
-const onInk = { sub: 'rgba(241,236,224,0.66)', faint: 'rgba(241,236,224,0.42)', line: 'rgba(241,236,224,0.22)' };
-const onPaper = { sub: 'rgba(25,27,18,0.66)', faint: 'rgba(25,27,18,0.4)', line: 'rgba(25,27,18,0.16)' };
+const onInk = { sub: 'rgba(241,236,224,0.7)', faint: 'rgba(241,236,224,0.45)', line: 'rgba(241,236,224,0.22)' };
+const onPaper = { sub: 'rgba(25,27,18,0.7)', faint: 'rgba(25,27,18,0.42)', line: 'rgba(25,27,18,0.16)' };
 
-/* radiant engraving motif */
-function Rays({ size = 440, stroke = GREEN, n = 128, opacity = 1 }) {
+/* scroll-reveal: opacity + translateY + blur, once, respects reduced motion */
+function Reveal({ children, delay = 0, style, className }) {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      setShown(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setShown(true);
+            io.disconnect();
+          }
+        }
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        ...style,
+        opacity: shown ? 1 : 0,
+        transform: shown ? 'translateY(0)' : 'translateY(8px)',
+        filter: shown ? 'blur(0)' : 'blur(8px)',
+        transition: `opacity 800ms ${EASE} ${delay}ms, transform 800ms ${EASE} ${delay}ms, filter 800ms ${EASE} ${delay}ms`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* radiant engraving motif — slow continuous rotation */
+function Rays({ size = 440, stroke = GREEN, n = 128, opacity = 1, spin = 90 }) {
   const c = size / 2;
   const lines = [];
   for (let i = 0; i < n; i++) {
@@ -35,7 +79,9 @@ function Rays({ size = 440, stroke = GREEN, n = 128, opacity = 1 }) {
   return (
     <svg width="100%" viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', opacity }} aria-hidden="true">
       <title>radiant motif</title>
-      {lines}
+      <g style={{ transformOrigin: 'center', animation: `cambia-spin ${spin}s linear infinite` }}>
+        {lines}
+      </g>
       {[40, 46, 140].map((r) => (
         <circle key={r} cx={c} cy={c} r={r} fill="none" stroke={stroke} strokeWidth={0.7} opacity={0.8} />
       ))}
@@ -44,9 +90,8 @@ function Rays({ size = 440, stroke = GREEN, n = 128, opacity = 1 }) {
   );
 }
 
-/* ── palette for the animated interface cards (rendered on ivory cards) ── */
+/* ── interface cards: ALL state changes are opacity/transform only — never height ── */
 const X = {
-  surface: '#F7F3E9',
   ink: INK,
   gray: '#5B5C49',
   faint: '#9A9985',
@@ -55,6 +100,7 @@ const X = {
   accentSoft: '#E1EBE1',
   paper: '#EDE8DA',
 };
+const T = (g) => `all .7s ${EASE}`;
 
 function ExDashboard({ g }) {
   const tiles = [
@@ -74,12 +120,16 @@ function ExDashboard({ g }) {
           <div
             key={k}
             style={{
+              position: 'relative',
+              height: 88,
               border: `1px solid ${hero ? X.accent : X.line}`,
               borderRadius: 8,
               padding: '9px 10px',
               background: hero ? X.accentSoft : '#FFFFFF',
-              opacity: dim ? 0.35 : 1,
-              transition: 'all .6s ease',
+              opacity: dim ? 0.4 : 1,
+              transform: hero ? 'scale(1.03)' : 'scale(1)',
+              transformOrigin: 'left top',
+              transition: T(g),
             }}
           >
             <div style={{ fontFamily: MONO, fontSize: 9, color: X.faint, textTransform: 'uppercase', letterSpacing: '.04em' }}>
@@ -88,17 +138,23 @@ function ExDashboard({ g }) {
             <div
               style={{
                 fontWeight: 700,
-                fontSize: hero ? 24 : 14,
+                fontSize: 18,
                 color: hero ? X.accent : X.ink,
-                transition: 'all .6s ease',
-                lineHeight: 1.1,
+                lineHeight: 1.15,
                 fontVariantNumeric: 'tabular-nums',
+                transition: `color .7s ${EASE}`,
               }}
             >
               {v}
             </div>
-            {hero && (
-              <svg width="100%" height="16" viewBox="0 0 60 16" preserveAspectRatio="none" style={{ marginTop: 4 }}>
+            {i === 0 && (
+              <svg
+                width="80%"
+                height="14"
+                viewBox="0 0 60 16"
+                preserveAspectRatio="none"
+                style={{ position: 'absolute', left: 10, bottom: 9, opacity: hero ? 1 : 0, transition: `opacity .7s ${EASE}` }}
+              >
                 <polyline points="0,14 12,10 24,12 36,6 48,7 60,2" fill="none" stroke={X.accent} strokeWidth="1.3" />
               </svg>
             )}
@@ -110,25 +166,41 @@ function ExDashboard({ g }) {
 }
 
 function ExForm({ g }) {
-  const fields = ['Store name', 'What you sell', 'Currency', 'Tax region', 'Webhook URL', 'Rate limit'];
+  const base = ['Store name', 'What you sell', 'Currency'];
+  const adv = ['Tax region', 'Webhook URL', 'Rate limit'];
+  const Field = ({ f }) => (
+    <div style={{ marginBottom: 9 }}>
+      <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 4, color: X.ink }}>{f}</div>
+      <div style={{ height: 28, background: X.paper, border: `1px solid ${X.line}`, borderRadius: 7 }} />
+    </div>
+  );
   return (
     <div>
-      {fields.map((f, i) => {
-        const hide = g && i >= 3;
-        return (
-          <div
-            key={f}
-            style={{ overflow: 'hidden', maxHeight: hide ? 0 : 52, opacity: hide ? 0 : 1, marginBottom: hide ? 0 : 9, transition: 'all .55s ease' }}
-          >
-            <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 4, color: X.ink }}>{f}</div>
-            <div style={{ height: 28, background: X.paper, border: `1px solid ${X.line}`, borderRadius: 7 }} />
-          </div>
-        );
-      })}
-      <div
-        style={{ maxHeight: g ? 30 : 0, opacity: g ? 1 : 0, overflow: 'hidden', transition: 'all .55s ease', fontSize: 11.5, color: X.accent, fontWeight: 600 }}
-      >
-        + Advanced (3) — optional
+      {base.map((f) => (
+        <Field key={f} f={f} />
+      ))}
+      {/* fixed-height slot: advanced fields cross-fade with the collapsed pill — no height anim */}
+      <div style={{ position: 'relative', height: 52 * 3 - 9 }}>
+        <div style={{ position: 'absolute', inset: 0, opacity: g ? 0 : 1, transform: g ? 'translateY(-6px)' : 'translateY(0)', transition: T(g) }}>
+          {adv.map((f) => (
+            <Field key={f} f={f} />
+          ))}
+        </div>
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            opacity: g ? 1 : 0,
+            transform: g ? 'translateY(0)' : 'translateY(6px)',
+            transition: T(g),
+            fontSize: 11.5,
+            color: X.accent,
+            fontWeight: 600,
+          }}
+        >
+          + Advanced (3) — optional
+        </div>
       </div>
     </div>
   );
@@ -136,7 +208,7 @@ function ExForm({ g }) {
 
 function ExNav({ g }) {
   const items = ['Overview', 'Orders', 'Refunds', 'Inventory', 'Customers', 'Reports', 'Integrations', 'Settings'];
-  const hot = [1, 2, 0];
+  const hot = [0, 1, 2];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {items.map((it, i) => {
@@ -144,17 +216,36 @@ function ExNav({ g }) {
         const dim = g && !hot.includes(i);
         return (
           <div key={it}>
-            {g && i === 3 && (
-              <div style={{ fontFamily: MONO, fontSize: 8.5, color: X.faint, textTransform: 'uppercase', letterSpacing: '.06em', padding: '7px 8px 3px' }}>
+            {i === 3 && (
+              <div
+                style={{
+                  height: 18,
+                  fontFamily: MONO,
+                  fontSize: 8.5,
+                  color: X.faint,
+                  textTransform: 'uppercase',
+                  letterSpacing: '.06em',
+                  padding: '5px 8px 0',
+                  opacity: g ? 1 : 0,
+                  transition: `opacity .55s ${EASE}`,
+                }}
+              >
                 More
               </div>
             )}
             <div
               className="flex items-center"
-              style={{ gap: 8, padding: '6px 8px', borderRadius: 6, background: promoted ? X.accentSoft : 'transparent', opacity: dim ? 0.35 : 1, transition: 'all .55s ease' }}
+              style={{
+                gap: 8,
+                padding: '6px 8px',
+                borderRadius: 6,
+                background: promoted ? X.accentSoft : 'transparent',
+                opacity: dim ? 0.4 : 1,
+                transition: T(g),
+              }}
             >
-              <span style={{ width: 5, height: 5, borderRadius: 99, background: promoted ? X.accent : X.line, transition: 'all .55s ease' }} />
-              <span style={{ fontSize: 12.5, fontWeight: promoted ? 700 : 400, color: promoted ? X.accent : X.ink, transition: 'all .55s ease' }}>
+              <span style={{ width: 5, height: 5, borderRadius: 99, background: promoted ? X.accent : X.line, transition: T(g) }} />
+              <span style={{ fontSize: 12.5, fontWeight: promoted ? 700 : 400, color: promoted ? X.accent : X.ink, transition: T(g) }}>
                 {it}
               </span>
             </div>
@@ -177,16 +268,30 @@ function ExFeed({ g }) {
         <div
           key={a}
           className="flex items-center"
-          style={{ gap: 10, padding: g ? '13px 4px' : '7px 4px', borderBottom: i < 2 ? `1px solid ${X.line}` : 'none', transition: 'all .6s ease' }}
+          style={{ gap: 11, height: 58, borderBottom: i < 2 ? `1px solid ${X.line}` : 'none' }}
         >
           <div
-            style={{ width: g ? 30 : 20, height: g ? 30 : 20, borderRadius: 99, background: X.accentSoft, color: X.accent, display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: g ? 12 : 10, flexShrink: 0, transition: 'all .6s ease' }}
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 99,
+              background: X.accentSoft,
+              color: X.accent,
+              display: 'grid',
+              placeItems: 'center',
+              fontWeight: 700,
+              fontSize: 11,
+              flexShrink: 0,
+              transform: g ? 'scale(1.35)' : 'scale(1)',
+              transformOrigin: 'left center',
+              transition: T(g),
+            }}
           >
             {a[0]}
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: g ? 13 : 12, fontWeight: 600, color: X.ink, transition: 'all .6s ease' }}>{a}</div>
-            <div style={{ maxHeight: g ? 16 : 0, opacity: g ? 1 : 0, overflow: 'hidden', fontSize: 11.5, color: X.gray, transition: 'all .6s ease' }}>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: X.ink }}>{a}</div>
+            <div style={{ fontSize: 11.5, color: X.gray, opacity: g ? 1 : 0, transform: g ? 'translateY(0)' : 'translateY(-3px)', transition: T(g) }}>
               {b}
             </div>
           </div>
@@ -203,7 +308,7 @@ function Card({ n, label, caption, children }) {
         <span style={{ fontFamily: MONO, fontSize: 11, color: GREEN }}>{n}</span>
         <span style={{ fontFamily: MONO, fontSize: 10.5, color: '#9A9985', textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
       </div>
-      <div style={{ minHeight: 188 }}>{children}</div>
+      <div style={{ minHeight: 196 }}>{children}</div>
       <div style={{ fontSize: 12.5, color: '#5B5C49', marginTop: 14, lineHeight: 1.5 }}>{caption}</div>
     </div>
   );
@@ -243,7 +348,7 @@ export default function App() {
     const l = document.createElement('link');
     l.rel = 'stylesheet';
     l.href =
-      'https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,500&family=Inter:wght@400;500;600;700&display=swap';
+      'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap';
     document.head.appendChild(l);
     const iv = setInterval(() => setG((x) => !x), 3400);
     return () => {
@@ -279,11 +384,13 @@ export default function App() {
         *{ -webkit-font-smoothing:antialiased; box-sizing:border-box; }
         html,body,#root{ background:${PAPER}; }
         a{ color:inherit; text-decoration:none; }
-        @media (prefers-reduced-motion: reduce){ *{ transition:none!important; } }
-        .serif{ font-family:'Bodoni Moda', Didot, Georgia, 'Times New Roman', serif; }
-        .wordmark{ font-family:'Bodoni Moda', Didot, Georgia, serif; font-weight:700; font-size:clamp(72px,18vw,220px); line-height:0.86; letter-spacing:-.02em; text-transform:uppercase; margin:0; }
-        .sec-h{ font-family:'Bodoni Moda', Didot, Georgia, serif; font-weight:600; font-size:clamp(32px,5vw,60px); line-height:0.98; letter-spacing:-.01em; text-transform:uppercase; margin:0; }
-        .feat-h{ font-family:'Bodoni Moda', Didot, Georgia, serif; font-weight:600; font-size:clamp(24px,3vw,36px); line-height:1.02; margin:0; }
+        p{ text-wrap:pretty; }
+        @keyframes cambia-spin{ to{ transform:rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } }
+        .serif{ font-family:'Fraunces', Georgia, 'Times New Roman', serif; }
+        .wordmark{ font-family:'Fraunces', Georgia, serif; font-weight:900; font-size:clamp(76px,18vw,220px); line-height:0.84; letter-spacing:-.02em; text-transform:uppercase; margin:0; text-wrap:balance; }
+        .sec-h{ font-family:'Fraunces', Georgia, serif; font-weight:700; font-size:clamp(34px,5vw,62px); line-height:0.98; letter-spacing:-.01em; text-transform:uppercase; margin:0; text-wrap:balance; }
+        .feat-h{ font-family:'Fraunces', Georgia, serif; font-weight:700; font-size:clamp(25px,3vw,36px); line-height:1.04; margin:0; text-wrap:balance; }
         .toprow{ display:none; }
         .install-grid{ display:grid; grid-template-columns:1fr; gap:34px; align-items:center; }
         .triptych{ display:grid; grid-template-columns:1fr; gap:34px; }
@@ -321,22 +428,30 @@ export default function App() {
           <span>born-adapted runtime</span>
         </div>
         <div style={{ borderTop: `1px solid ${onPaper.line}`, paddingTop: 26 }}>
-          <Eyebrow color={GREEN}>Open source · MIT · a DESIGN.md extension</Eyebrow>
-          <h1 className="wordmark" style={{ marginTop: 12 }}>
-            Cambia
-          </h1>
-          <p className="serif" style={{ fontStyle: 'italic', fontSize: 'clamp(20px,2.6vw,30px)', lineHeight: 1.3, margin: '20px 0 0', maxWidth: 660, color: INK }}>
-            An interface that <span style={dotted}>changes</span> as the people who use it do — a living growth layer on
-            top of your design system.
-          </p>
-          <p style={{ fontFamily: MONO, fontSize: 12, color: onPaper.faint, margin: '14px 0 0' }}>
-            /ˈkam.bja/ — Latin <span style={{ color: GREEN }}>cambium</span>, a tree’s living growth layer · “it changes”
-          </p>
+          <Reveal>
+            <Eyebrow color={GREEN}>Open source · MIT · a DESIGN.md extension</Eyebrow>
+          </Reveal>
+          <Reveal delay={80}>
+            <h1 className="wordmark" style={{ marginTop: 12 }}>
+              Cambia
+            </h1>
+          </Reveal>
+          <Reveal delay={180}>
+            <p className="serif" style={{ fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(20px,2.6vw,30px)', lineHeight: 1.3, margin: '20px 0 0', maxWidth: 660, color: INK }}>
+              An interface that <span style={dotted}>changes</span> as the people who use it do — a living growth layer on
+              top of your design system.
+            </p>
+          </Reveal>
+          <Reveal delay={260}>
+            <p style={{ fontFamily: MONO, fontSize: 12, color: onPaper.faint, margin: '14px 0 0' }}>
+              /ˈkam.bja/ — Latin <span style={{ color: GREEN }}>cambium</span>, a tree’s living growth layer · “it changes”
+            </p>
+          </Reveal>
         </div>
 
         {/* install */}
         <div className="install-grid" style={{ marginTop: 44 }}>
-          <div>
+          <Reveal>
             <Eyebrow color={onPaper.faint}>Install via npx</Eyebrow>
             <div
               className="flex items-center justify-between"
@@ -359,6 +474,7 @@ export default function App() {
                     padding: '5px 12px',
                     fontFamily: MONO,
                     fontSize: 11.5,
+                    transition: `all .25s ${EASE}`,
                   }}
                 >
                   {t}
@@ -378,36 +494,40 @@ export default function App() {
               One block on the design system you already have. <span style={{ color: INK }}>cambia init</span> is
               non-destructive; your agent reads the file and your components carry it.
             </p>
-          </div>
-          <div>
+          </Reveal>
+          <Reveal delay={120}>
             <Rays size={420} stroke={GREEN} />
-          </div>
+          </Reveal>
         </div>
       </div>
 
       {/* how it works — inverted ink */}
       <div style={{ background: INK, color: PAPER, marginTop: 64 }}>
         <div style={{ ...wrap, paddingTop: 58, paddingBottom: 60 }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 40, flexWrap: 'wrap', gap: 12 }}>
-            <h2 className="sec-h" style={{ maxWidth: 620 }}>
-              Born adapted. Then it learns.
-            </h2>
-            <span style={{ fontFamily: MONO, fontSize: 11, color: GREEN_BRIGHT, border: `1px solid ${GREEN_BRIGHT}`, padding: '5px 10px', letterSpacing: '.08em' }}>
-              LIVE ENGINE
-            </span>
-          </div>
+          <Reveal>
+            <div className="flex items-center justify-between" style={{ marginBottom: 40, flexWrap: 'wrap', gap: 12 }}>
+              <h2 className="sec-h" style={{ maxWidth: 620 }}>
+                Born adapted. Then it learns.
+              </h2>
+              <span style={{ fontFamily: MONO, fontSize: 11, color: GREEN_BRIGHT, border: `1px solid ${GREEN_BRIGHT}`, padding: '5px 10px', letterSpacing: '.08em' }}>
+                LIVE ENGINE
+              </span>
+            </div>
+          </Reveal>
           <div className="triptych">
-            {steps.map(([tag, h, d]) => (
-              <div key={tag} style={{ borderTop: `1px solid ${onInk.line}`, paddingTop: 18 }}>
-                <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN_BRIGHT, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 16 }}>
-                  {tag}
+            {steps.map(([tag, h, d], i) => (
+              <Reveal key={tag} delay={i * 100}>
+                <div style={{ borderTop: `1px solid ${onInk.line}`, paddingTop: 18 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN_BRIGHT, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 16 }}>
+                    {tag}
+                  </div>
+                  <div style={{ marginBottom: 16, opacity: 0.9 }}>
+                    <Rays size={260} stroke={GREEN_BRIGHT} n={88} opacity={0.55} spin={120} />
+                  </div>
+                  <h3 className="feat-h">{h}</h3>
+                  <p style={{ fontSize: 14.5, color: onInk.sub, lineHeight: 1.6, margin: '12px 0 0' }}>{d}</p>
                 </div>
-                <div style={{ marginBottom: 16, opacity: 0.9 }}>
-                  <Rays size={260} stroke={GREEN_BRIGHT} n={88} opacity={0.55} />
-                </div>
-                <h3 className="feat-h">{h}</h3>
-                <p style={{ fontSize: 14.5, color: onInk.sub, lineHeight: 1.6, margin: '12px 0 0' }}>{d}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -415,55 +535,61 @@ export default function App() {
 
       {/* what it listens for — paper */}
       <div style={{ ...wrap, paddingTop: 60, paddingBottom: 58 }}>
-        <Eyebrow color={GREEN}>§ what it listens for</Eyebrow>
-        <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
-          Only the choices you hand it
-        </h2>
-        <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 28px', maxWidth: 540 }}>
-          Each adaptive trait maps to one explicit signal. The engine has no global listeners.
-        </p>
-        <div style={{ border: `1px solid ${INK}`, maxWidth: 720 }}>
-          {signals.map(([trait, sig], i) => (
-            <div
-              key={trait}
-              className="flex items-center justify-between"
-              style={{ padding: '14px 18px', borderBottom: i < signals.length - 1 ? `1px solid ${onPaper.line}` : 'none', gap: 12 }}
-            >
-              <span style={{ fontFamily: MONO, fontSize: 13, color: GREEN }}>{trait}</span>
-              <span style={{ fontSize: 13.5, color: onPaper.sub, textAlign: 'right' }}>{sig}</span>
-            </div>
-          ))}
-        </div>
-        <p style={{ fontSize: 14, color: onPaper.sub, marginTop: 16, lineHeight: 1.6, maxWidth: 620 }}>
-          Nothing else. <span style={{ color: INK, fontWeight: 600 }}>No mouse tracking, no scroll, no dwell time, no keystrokes</span> —
-          only the discrete choice you forward to <span style={{ fontFamily: MONO, color: GREEN }}>observe()</span>.
-        </p>
+        <Reveal>
+          <Eyebrow color={GREEN}>§ what it listens for</Eyebrow>
+          <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
+            Only the choices you hand it
+          </h2>
+          <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 28px', maxWidth: 540 }}>
+            Each adaptive trait maps to one explicit signal. The engine has no global listeners.
+          </p>
+        </Reveal>
+        <Reveal delay={80}>
+          <div style={{ border: `1px solid ${INK}`, maxWidth: 720 }}>
+            {signals.map(([trait, sig], i) => (
+              <div
+                key={trait}
+                className="flex items-center justify-between"
+                style={{ padding: '14px 18px', borderBottom: i < signals.length - 1 ? `1px solid ${onPaper.line}` : 'none', gap: 12 }}
+              >
+                <span style={{ fontFamily: MONO, fontSize: 13, color: GREEN }}>{trait}</span>
+                <span style={{ fontSize: 13.5, color: onPaper.sub, textAlign: 'right' }}>{sig}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 14, color: onPaper.sub, marginTop: 16, lineHeight: 1.6, maxWidth: 620 }}>
+            Nothing else. <span style={{ color: INK, fontWeight: 600 }}>No mouse tracking, no scroll, no dwell time, no keystrokes</span> —
+            only the discrete choice you forward to <span style={{ fontFamily: MONO, color: GREEN }}>observe()</span>.
+          </p>
+        </Reveal>
       </div>
 
       {/* across every interface — ink, ivory cards */}
       <div style={{ background: INK, color: PAPER }}>
         <div style={{ ...wrap, paddingTop: 58, paddingBottom: 58 }}>
-          <Eyebrow color={onInk.faint}>§ across every interface</Eyebrow>
-          <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
-            The same engine, any interface
-          </h2>
-          <p style={{ fontSize: 15.5, color: onInk.sub, margin: '16px 0 28px', maxWidth: 540 }}>
-            Not just tables. A dashboard, a form, a navigation, a feed — each quietly finding its shape for the person in
-            front of it. Watch them breathe.
-          </p>
+          <Reveal>
+            <Eyebrow color={onInk.faint}>§ across every interface</Eyebrow>
+            <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
+              The same engine, any interface
+            </h2>
+            <p style={{ fontSize: 15.5, color: onInk.sub, margin: '16px 0 28px', maxWidth: 540 }}>
+              Not just tables. A dashboard, a form, a navigation, a feed — each quietly finding its shape for the person
+              in front of it. Watch them breathe.
+            </p>
+          </Reveal>
           <div className="figs">
-            <Card n="01" label="dashboard" caption="Surfaces the one metric this person actually watches; the rest recede.">
-              <ExDashboard g={g} />
-            </Card>
-            <Card n="02" label="form" caption="Shortens to the essentials for people who never touch the advanced fields.">
-              <ExForm g={g} />
-            </Card>
-            <Card n="03" label="navigation" caption="Lifts the few destinations someone uses; files the rest under ‘More’.">
-              <ExNav g={g} />
-            </Card>
-            <Card n="04" label="feed" caption="Loosens into readable cards, or tightens into a dense list, to match how they scan.">
-              <ExFeed g={g} />
-            </Card>
+            {[
+              ['01', 'dashboard', 'Surfaces the one metric this person actually watches; the rest recede.', <ExDashboard key="d" g={g} />],
+              ['02', 'form', 'Shortens to the essentials for people who never touch the advanced fields.', <ExForm key="f" g={g} />],
+              ['03', 'navigation', 'Lifts the few destinations someone uses; files the rest under ‘More’.', <ExNav key="n" g={g} />],
+              ['04', 'feed', 'Loosens into readable cards, or tightens into a dense list, to match how they scan.', <ExFeed key="e" g={g} />],
+            ].map(([n, label, cap, node], i) => (
+              <Reveal key={n} delay={(i % 2) * 100}>
+                <Card n={n} label={label} caption={cap}>
+                  {node}
+                </Card>
+              </Reveal>
+            ))}
           </div>
           <div style={{ textAlign: 'center', marginTop: 16, fontFamily: MONO, fontSize: 11, color: onInk.faint }}>
             ── default ⇄ grown · looping ──
@@ -473,24 +599,28 @@ export default function App() {
 
       {/* privacy — paper */}
       <div style={{ ...wrap, paddingTop: 60, paddingBottom: 56 }}>
-        <Eyebrow color={GREEN}>§ yours, on your device</Eyebrow>
-        <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
-          Personalization that never phones home
-        </h2>
-        <p className="serif" style={{ fontStyle: 'italic', fontSize: 'clamp(18px,2.2vw,24px)', color: INK, margin: '16px 0 30px', maxWidth: 600, lineHeight: 1.35 }}>
-          GDPR-friendly by construction — because the data barely exists, and never <span style={dotted}>leaves</span>.
-        </p>
+        <Reveal>
+          <Eyebrow color={GREEN}>§ yours, on your device</Eyebrow>
+          <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
+            Personalization that never phones home
+          </h2>
+          <p className="serif" style={{ fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(18px,2.2vw,24px)', color: INK, margin: '16px 0 30px', maxWidth: 600, lineHeight: 1.35 }}>
+            GDPR-friendly by construction — because the data barely exists, and never <span style={dotted}>leaves</span>.
+          </p>
+        </Reveal>
         <div className="triptych">
           {[
             ['Nothing transmitted', 'No telemetry endpoint, no shared server, no network calls. The runtime runs entirely on the device.'],
             ['Almost nothing stored', 'Only small per-trait tallies (comfortable: 5, compact: 3), keyed by user. No PII, no event logs, no history.'],
             ['Erasable in one call', 'cambia.forget(userId) deletes a user’s state and reverts the UI to born-adapted defaults. See PRIVACY.md.'],
           ].map(([h, d], i) => (
-            <div key={h} style={{ borderTop: `1px solid ${INK}`, paddingTop: 16 }}>
-              <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN, marginBottom: 10 }}>{`0${i + 1}`}</div>
-              <div className="serif" style={{ fontSize: 22, marginBottom: 8 }}>{h}</div>
-              <p style={{ fontSize: 14, color: onPaper.sub, lineHeight: 1.6, margin: 0 }}>{d}</p>
-            </div>
+            <Reveal key={h} delay={i * 100}>
+              <div style={{ borderTop: `1px solid ${INK}`, paddingTop: 16 }}>
+                <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN, marginBottom: 10 }}>{`0${i + 1}`}</div>
+                <div className="serif" style={{ fontSize: 23, fontWeight: 600, marginBottom: 8 }}>{h}</div>
+                <p style={{ fontSize: 14, color: onPaper.sub, lineHeight: 1.6, margin: 0 }}>{d}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -498,38 +628,44 @@ export default function App() {
       {/* tailwind + packages — inverted ink */}
       <div style={{ background: INK, color: PAPER }}>
         <div style={{ ...wrap, paddingTop: 56, paddingBottom: 60 }}>
-          <Eyebrow color={onInk.faint}>§ tailwind, in sync</Eyebrow>
-          <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
-            One source of truth for tokens
-          </h2>
-          <div
-            style={{ marginTop: 22, border: `1px solid ${onInk.line}`, padding: '16px 18px', fontFamily: MONO, fontSize: 12.5, lineHeight: 1.9, maxWidth: 720, whiteSpace: 'pre', overflowX: 'auto' }}
-          >
-            <div>
-              <span style={{ color: onInk.faint }}>$ </span>npx cambia tailwind --out cambia.theme.js
-              <span style={{ color: onInk.faint }}>{'   # DESIGN.md tokens → Tailwind'}</span>
-            </div>
-            <div>
-              <span style={{ color: onInk.faint }}>$ </span>npx cambia tailwind --check cambia.theme.js
-              <span style={{ color: onInk.faint }}>{'  # CI fails on drift'}</span>
-            </div>
-          </div>
-          <p style={{ fontSize: 14, color: onInk.sub, margin: '14px 0 46px', lineHeight: 1.6, maxWidth: 620 }}>
-            Colors, spacing, radius and type flow from DESIGN.md into Tailwind — generated, not hand-mirrored, and
-            drift-checked in CI.
-          </p>
-
-          <Eyebrow color={onInk.faint}>§ four small packages</Eyebrow>
-          <h2 className="sec-h" style={{ margin: '14px 0 26px', maxWidth: 720 }}>
-            Declare it, then make it live
-          </h2>
-          <div className="pkgs" style={{ background: onInk.line }}>
-            {packages.map(([name, pkg, detail]) => (
-              <div key={pkg} style={{ background: INK, padding: '20px 20px' }}>
-                <div className="serif" style={{ fontSize: 26, color: PAPER, marginBottom: 4 }}>{name}</div>
-                <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN_BRIGHT, marginBottom: 8 }}>{pkg}</div>
-                <div style={{ fontFamily: MONO, fontSize: 12, color: onInk.sub }}>{detail}</div>
+          <Reveal>
+            <Eyebrow color={onInk.faint}>§ tailwind, in sync</Eyebrow>
+            <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
+              One source of truth for tokens
+            </h2>
+            <div
+              style={{ marginTop: 22, border: `1px solid ${onInk.line}`, padding: '16px 18px', fontFamily: MONO, fontSize: 12.5, lineHeight: 1.9, maxWidth: 720, whiteSpace: 'pre', overflowX: 'auto' }}
+            >
+              <div>
+                <span style={{ color: onInk.faint }}>$ </span>npx cambia tailwind --out cambia.theme.js
+                <span style={{ color: onInk.faint }}>{'   # DESIGN.md tokens → Tailwind'}</span>
               </div>
+              <div>
+                <span style={{ color: onInk.faint }}>$ </span>npx cambia tailwind --check cambia.theme.js
+                <span style={{ color: onInk.faint }}>{'  # CI fails on drift'}</span>
+              </div>
+            </div>
+            <p style={{ fontSize: 14, color: onInk.sub, margin: '14px 0 46px', lineHeight: 1.6, maxWidth: 620 }}>
+              Colors, spacing, radius and type flow from DESIGN.md into Tailwind — generated, not hand-mirrored, and
+              drift-checked in CI.
+            </p>
+          </Reveal>
+
+          <Reveal>
+            <Eyebrow color={onInk.faint}>§ four small packages</Eyebrow>
+            <h2 className="sec-h" style={{ margin: '14px 0 26px', maxWidth: 720 }}>
+              Declare it, then make it live
+            </h2>
+          </Reveal>
+          <div className="pkgs" style={{ background: onInk.line }}>
+            {packages.map(([name, pkg, detail], i) => (
+              <Reveal key={pkg} delay={(i % 2) * 90}>
+                <div style={{ background: INK, padding: '20px 20px' }}>
+                  <div className="serif" style={{ fontSize: 27, fontWeight: 600, color: PAPER, marginBottom: 4 }}>{name}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN_BRIGHT, marginBottom: 8 }}>{pkg}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 12, color: onInk.sub }}>{detail}</div>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -537,20 +673,22 @@ export default function App() {
 
       {/* close — paper */}
       <div style={{ ...wrap, paddingTop: 72, paddingBottom: 36 }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, color: onPaper.faint, marginBottom: 22, letterSpacing: '.1em' }}>
-          {'/\\-_=+|<  ~:*-/  =_-+|>'}
-        </div>
-        <h2 className="sec-h" style={{ maxWidth: 760 }}>
-          Stop shipping interfaces that never grow up
-        </h2>
-        <div className="flex items-center" style={{ gap: 18, flexWrap: 'wrap', marginTop: 28 }}>
-          <span style={{ fontFamily: MONO, fontSize: 13.5, background: INK, color: PAPER, fontWeight: 600, padding: '12px 18px' }}>
-            npx cambia init
-          </span>
-          <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md" style={{ fontFamily: MONO, fontSize: 13, color: GREEN }}>
-            read the spec →
-          </a>
-        </div>
+        <Reveal>
+          <div style={{ fontFamily: MONO, fontSize: 11, color: onPaper.faint, marginBottom: 22, letterSpacing: '.1em' }}>
+            {'/\\-_=+|<  ~:*-/  =_-+|>'}
+          </div>
+          <h2 className="sec-h" style={{ maxWidth: 760 }}>
+            Stop shipping interfaces that never grow up
+          </h2>
+          <div className="flex items-center" style={{ gap: 18, flexWrap: 'wrap', marginTop: 28 }}>
+            <span style={{ fontFamily: MONO, fontSize: 13.5, background: INK, color: PAPER, fontWeight: 600, padding: '12px 18px' }}>
+              npx cambia init
+            </span>
+            <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md" style={{ fontFamily: MONO, fontSize: 13, color: GREEN }}>
+              read the spec →
+            </a>
+          </div>
+        </Reveal>
       </div>
 
       {/* footer */}
