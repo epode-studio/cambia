@@ -8,7 +8,7 @@ Cambia uses [Bun](https://bun.sh) workspaces. Tool versions are pinned with
 [mise](https://mise.jdx.dev) (`mise.toml`), but any Node 20+ / Bun setup works.
 
 ```bash
-git clone https://github.com/epode/cambia.git
+git clone https://github.com/epode-studio/cambia.git
 cd cambia
 bun install
 bun run build      # builds @cambia/core then the cambia CLI

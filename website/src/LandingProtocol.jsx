@@ -307,8 +307,8 @@ export default function App() {
           </div>
           <div className="flex items-center" style={{ gap: 20, fontFamily: MONO, fontSize: 12, color: onPaper.sub }}>
             <span style={{ color: onPaper.faint, letterSpacing: '.05em' }}>{'/\\-_=+|<  ~:*-/'}</span>
-            <a href="https://github.com/epode/cambia/blob/main/SPEC.md">spec</a>
-            <a href="https://github.com/epode/cambia">github</a>
+            <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md">spec</a>
+            <a href="https://github.com/epode-studio/cambia">github</a>
           </div>
         </div>
       </div>
@@ -547,7 +547,7 @@ export default function App() {
           <span style={{ fontFamily: MONO, fontSize: 13.5, background: INK, color: PAPER, fontWeight: 600, padding: '12px 18px' }}>
             npx cambia init
           </span>
-          <a href="https://github.com/epode/cambia/blob/main/SPEC.md" style={{ fontFamily: MONO, fontSize: 13, color: GREEN }}>
+          <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md" style={{ fontFamily: MONO, fontSize: 13, color: GREEN }}>
             read the spec →
           </a>
         </div>
