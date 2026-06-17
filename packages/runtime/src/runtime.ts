@@ -97,10 +97,32 @@ export class Role {
       this.listeners.delete(listener);
     };
   }
+
+  /** The adaptive trait names this role tracks. */
+  traitNames(): string[] {
+    return [...this.traits.keys()];
+  }
+
+  /**
+   * Forget this role's learned state — erase it from the store and snap every trait back
+   * to its born-adapted prior. Notifies subscribers so the live UI reverts.
+   */
+  reset(): void {
+    for (const [name, trait] of this.traits) {
+      const key = this.storeKey(name);
+      if (this.store.remove) this.store.remove(key);
+      else this.store.set(key, '');
+      trait.reset();
+    }
+    this.snapshot = this.computeSnapshot();
+    for (const l of this.listeners) l();
+  }
 }
 
 export class Cambia {
   private readonly roles = new Map<string, Role>();
+  private readonly userId: string;
+  private readonly store: CambiaStore;
 
   constructor(opts: CambiaOptions) {
     const { frontMatter } = readFrontMatter(opts.designMd);
@@ -112,6 +134,8 @@ export class Cambia {
     const store = opts.store ?? createMemoryStore();
     const userId = opts.userId ?? 'default';
     const margin = opts.switchMargin ?? 1.5;
+    this.store = store;
+    this.userId = userId;
 
     for (const [roleName, role] of Object.entries<any>(cambia.roles)) {
       const conserved = Array.isArray(role?.conserved) ? role.conserved : [];
@@ -129,6 +153,29 @@ export class Cambia {
 
   roleNames(): string[] {
     return [...this.roles.keys()];
+  }
+
+  /**
+   * Erase a user's personalization — their stored estimates are deleted and every adaptive
+   * trait snaps back to the born-adapted default. The GDPR "right to erasure", in one call.
+   *
+   * Omit `userId` (or pass this engine's own user) to also reset the live, in-memory state and
+   * notify subscribers so the UI reverts immediately. Passing a different user clears that
+   * user's persisted state in the store (best-effort) without touching this engine's live state.
+   */
+  forget(userId?: string): void {
+    const target = userId ?? this.userId;
+    if (target === this.userId) {
+      for (const role of this.roles.values()) role.reset();
+      return;
+    }
+    for (const [roleName, role] of this.roles) {
+      for (const trait of role.traitNames()) {
+        const key = `${target}:${roleName}:${trait}`;
+        if (this.store.remove) this.store.remove(key);
+        else this.store.set(key, '');
+      }
+    }
   }
 }
 

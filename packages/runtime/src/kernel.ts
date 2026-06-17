@@ -76,4 +76,12 @@ export class Trait {
   serialize(): TraitState {
     return { observed: this.observed, current: this.current };
   }
+
+  /** Forget all observations — fall back to the born-adapted prior. Returns true if the value changed. */
+  reset(): boolean {
+    const before = this.current;
+    this.observed = {};
+    this.current = argmax(this.prior);
+    return this.current !== before;
+  }
 }

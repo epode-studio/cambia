@@ -4,6 +4,8 @@
 export interface CambiaStore {
   get(key: string): string | null;
   set(key: string, value: string): void;
+  /** Optional: delete a key. If absent, the runtime overwrites with an empty value instead. */
+  remove?(key: string): void;
 }
 
 export function createMemoryStore(): CambiaStore {
@@ -12,6 +14,9 @@ export function createMemoryStore(): CambiaStore {
     get: (k) => (map.has(k) ? (map.get(k) as string) : null),
     set: (k, v) => {
       map.set(k, v);
+    },
+    remove: (k) => {
+      map.delete(k);
     },
   };
 }
@@ -23,6 +28,7 @@ export function createMemoryStore(): CambiaStore {
 interface WebStorageLike {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }
 
 export function createLocalStorageStore(namespace = 'cambia'): CambiaStore {
@@ -32,6 +38,7 @@ export function createLocalStorageStore(namespace = 'cambia'): CambiaStore {
     return {
       get: (k) => ls.getItem(`${namespace}:${k}`),
       set: (k, v) => ls.setItem(`${namespace}:${k}`, v),
+      remove: (k) => ls.removeItem(`${namespace}:${k}`),
     };
   } catch {
     return createMemoryStore();

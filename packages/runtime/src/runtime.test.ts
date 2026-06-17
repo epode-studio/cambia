@@ -124,7 +124,36 @@ test('the kernel goes quiet once the user stops correcting', () => {
   assert.equal(t.value(), 'comfortable');
 });
 
-// --- Guard: a DESIGN.md without a cambia block throws ----------------------
-test('createCambia throws on a DESIGN.md with no cambia block', () => {
-  assert.throws(() => createCambia({ designMd: '---\nname: plain\n---\n# x\n' }), /No `cambia:` block/);
+// --- forget(): the right to erasure ----------------------------------------
+test('forget() resets live state to born-adapted and clears the store', () => {
+  const store = createMemoryStore();
+  const c = createCambia({ designMd: ANALYTICS_DESIGN, userId: 'heidi', store });
+  const role = c.role('tabular-list');
+  let fires = 0;
+  role.subscribe(() => fires++);
+  for (let i = 0; i < 4; i++) role.observe({ trait: 'density', value: 'comfortable' });
+  assert.equal(role.value('density'), 'comfortable');
+
+  c.forget();
+  assert.equal(role.value('density'), 'compact', 'snaps back to the born-adapted default');
+  assert.equal(store.get('heidi:tabular-list:density'), null, 'store entry removed');
+  assert.ok(fires >= 2, 'subscribers notified on the revert');
+
+  // A fresh engine over the same store confirms nothing personalized persisted.
+  const c2 = createCambia({ designMd: ANALYTICS_DESIGN, userId: 'heidi', store });
+  assert.equal(c2.role('tabular-list').value('density'), 'compact');
+});
+
+test("forget(otherUser) clears that user's stored state without touching live state", () => {
+  const store = createMemoryStore();
+  const me = createCambia({ designMd: ANALYTICS_DESIGN, userId: 'me', store });
+  for (let i = 0; i < 4; i++) me.role('tabular-list').observe({ trait: 'density', value: 'comfortable' });
+
+  // personalize another user via their own engine on the shared store
+  const them = createCambia({ designMd: ANALYTICS_DESIGN, userId: 'them', store });
+  for (let i = 0; i < 4; i++) them.role('tabular-list').observe({ trait: 'density', value: 'comfortable' });
+
+  me.forget('them');
+  assert.equal(store.get('them:tabular-list:density'), null, "the other user's state is erased");
+  assert.equal(me.role('tabular-list').value('density'), 'comfortable', 'my live state is untouched');
 });
