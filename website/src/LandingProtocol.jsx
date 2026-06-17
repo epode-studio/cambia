@@ -1,27 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 
-/* ── classical-modern editorial: warm ivory + ink + a botanical green tied to the
-      name (cambium = a tree's living growth layer). Fraunces display serif (legible,
-      bold), mono labels, inverted ink sections. Our own palette — not a copy. ── */
-const PAPER = '#F1ECE0';
-const INK = '#191B12';
-const GREEN = '#2E6F4B';
-const GREEN_BRIGHT = '#4FAE7B';
+/* ── cold, bold, black & white. Fraunces display serif (legible), mono labels,
+      inverted ink sections, high contrast. Monochrome — no accent hue. ── */
+const PAPER = '#F4F4F5';
+const INK = '#0B0B0C';
+const GREY = '#9A9B9E';
+const RAYS_P = '#D2D3D5'; /* light grey rays on paper (avoids moiré) */
+const RAYS_I = 'rgba(244,244,245,0.28)';
 const MONO = "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace";
 const EASE = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
-const onInk = { sub: 'rgba(241,236,224,0.7)', faint: 'rgba(241,236,224,0.45)', line: 'rgba(241,236,224,0.22)' };
-const onPaper = { sub: 'rgba(25,27,18,0.7)', faint: 'rgba(25,27,18,0.42)', line: 'rgba(25,27,18,0.16)' };
+const onInk = { sub: 'rgba(244,244,245,0.72)', faint: 'rgba(244,244,245,0.46)', line: 'rgba(244,244,245,0.22)' };
+const onPaper = { sub: 'rgba(11,11,12,0.72)', faint: 'rgba(11,11,12,0.46)', line: 'rgba(11,11,12,0.14)' };
 
-/* scroll-reveal: opacity + translateY + blur, once, respects reduced motion */
+/* scroll-reveal: opacity + translateY + slight blur, once, respects reduced motion */
 function Reveal({ children, delay = 0, style, className }) {
   const ref = useRef(null);
   const [shown, setShown] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       setShown(true);
       return;
     }
@@ -47,7 +46,8 @@ function Reveal({ children, delay = 0, style, className }) {
         ...style,
         opacity: shown ? 1 : 0,
         transform: shown ? 'translateY(0)' : 'translateY(8px)',
-        filter: shown ? 'blur(0)' : 'blur(8px)',
+        filter: shown ? 'none' : 'blur(6px)',
+        willChange: 'opacity, transform',
         transition: `opacity 800ms ${EASE} ${delay}ms, transform 800ms ${EASE} ${delay}ms, filter 800ms ${EASE} ${delay}ms`,
       }}
     >
@@ -56,14 +56,14 @@ function Reveal({ children, delay = 0, style, className }) {
   );
 }
 
-/* radiant engraving motif — slow continuous rotation */
-function Rays({ size = 440, stroke = GREEN, n = 128, opacity = 1, spin = 90 }) {
+/* radiant engraving motif — static, low-density to stay crisp */
+function Rays({ size = 440, stroke = RAYS_P, n = 76, opacity = 1 }) {
   const c = size / 2;
   const lines = [];
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2;
-    const inner = 52 + (i % 4) * 7;
-    const outer = c - 6 - (i % 6) * 15;
+    const inner = 54 + (i % 4) * 8;
+    const outer = c - 6 - (i % 5) * 16;
     lines.push(
       <line
         key={i}
@@ -72,20 +72,18 @@ function Rays({ size = 440, stroke = GREEN, n = 128, opacity = 1, spin = 90 }) {
         x2={c + Math.cos(a) * outer}
         y2={c + Math.sin(a) * outer}
         stroke={stroke}
-        strokeWidth={i % 7 === 0 ? 1.3 : 0.6}
+        strokeWidth={i % 6 === 0 ? 1.2 : 0.8}
       />
     );
   }
   return (
     <svg width="100%" viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', opacity }} aria-hidden="true">
       <title>radiant motif</title>
-      <g style={{ transformOrigin: 'center', animation: `cambia-spin ${spin}s linear infinite` }}>
-        {lines}
-      </g>
-      {[40, 46, 140].map((r) => (
-        <circle key={r} cx={c} cy={c} r={r} fill="none" stroke={stroke} strokeWidth={0.7} opacity={0.8} />
+      {lines}
+      {[42, 48, 142].map((r) => (
+        <circle key={r} cx={c} cy={c} r={r} fill="none" stroke={stroke} strokeWidth={0.8} opacity={0.85} />
       ))}
-      <circle cx={c} cy={c} r={28} fill="none" stroke={stroke} strokeWidth={1.3} />
+      <circle cx={c} cy={c} r={30} fill="none" stroke={stroke} strokeWidth={1.2} />
     </svg>
   );
 }
@@ -93,14 +91,14 @@ function Rays({ size = 440, stroke = GREEN, n = 128, opacity = 1, spin = 90 }) {
 /* ── interface cards: ALL state changes are opacity/transform only — never height ── */
 const X = {
   ink: INK,
-  gray: '#5B5C49',
-  faint: '#9A9985',
-  line: '#DCD5C4',
-  accent: GREEN,
-  accentSoft: '#E1EBE1',
-  paper: '#EDE8DA',
+  gray: '#5C5D60',
+  faint: '#9A9B9E',
+  line: '#DCDCDE',
+  accent: INK,
+  accentSoft: '#E6E6E8',
+  paper: '#ECECEE',
 };
-const T = (g) => `all .7s ${EASE}`;
+const T = `all .7s ${EASE}`;
 
 function ExDashboard({ g }) {
   const tiles = [
@@ -127,9 +125,7 @@ function ExDashboard({ g }) {
               padding: '9px 10px',
               background: hero ? X.accentSoft : '#FFFFFF',
               opacity: dim ? 0.4 : 1,
-              transform: hero ? 'scale(1.03)' : 'scale(1)',
-              transformOrigin: 'left top',
-              transition: T(g),
+              transition: T,
             }}
           >
             <div style={{ fontFamily: MONO, fontSize: 9, color: X.faint, textTransform: 'uppercase', letterSpacing: '.04em' }}>
@@ -137,12 +133,12 @@ function ExDashboard({ g }) {
             </div>
             <div
               style={{
-                fontWeight: 700,
+                fontWeight: hero ? 800 : 700,
                 fontSize: 18,
-                color: hero ? X.accent : X.ink,
+                color: X.ink,
                 lineHeight: 1.15,
                 fontVariantNumeric: 'tabular-nums',
-                transition: `color .7s ${EASE}`,
+                transition: `font-weight .7s ${EASE}`,
               }}
             >
               {v}
@@ -155,7 +151,7 @@ function ExDashboard({ g }) {
                 preserveAspectRatio="none"
                 style={{ position: 'absolute', left: 10, bottom: 9, opacity: hero ? 1 : 0, transition: `opacity .7s ${EASE}` }}
               >
-                <polyline points="0,14 12,10 24,12 36,6 48,7 60,2" fill="none" stroke={X.accent} strokeWidth="1.3" />
+                <polyline points="0,14 12,10 24,12 36,6 48,7 60,2" fill="none" stroke={X.accent} strokeWidth="1.4" />
               </svg>
             )}
           </div>
@@ -169,7 +165,7 @@ function ExForm({ g }) {
   const base = ['Store name', 'What you sell', 'Currency'];
   const adv = ['Tax region', 'Webhook URL', 'Rate limit'];
   const Field = ({ f }) => (
-    <div style={{ marginBottom: 9 }}>
+    <div style={{ marginBottom: 10 }}>
       <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 4, color: X.ink }}>{f}</div>
       <div style={{ height: 28, background: X.paper, border: `1px solid ${X.line}`, borderRadius: 7 }} />
     </div>
@@ -180,8 +176,8 @@ function ExForm({ g }) {
         <Field key={f} f={f} />
       ))}
       {/* fixed-height slot: advanced fields cross-fade with the collapsed pill — no height anim */}
-      <div style={{ position: 'relative', height: 52 * 3 - 9 }}>
-        <div style={{ position: 'absolute', inset: 0, opacity: g ? 0 : 1, transform: g ? 'translateY(-6px)' : 'translateY(0)', transition: T(g) }}>
+      <div style={{ position: 'relative', height: 174 }}>
+        <div style={{ position: 'absolute', inset: 0, opacity: g ? 0 : 1, transform: g ? 'translateY(-6px)' : 'translateY(0)', transition: T }}>
           {adv.map((f) => (
             <Field key={f} f={f} />
           ))}
@@ -193,10 +189,10 @@ function ExForm({ g }) {
             left: 0,
             opacity: g ? 1 : 0,
             transform: g ? 'translateY(0)' : 'translateY(6px)',
-            transition: T(g),
+            transition: T,
             fontSize: 11.5,
             color: X.accent,
-            fontWeight: 600,
+            fontWeight: 700,
           }}
         >
           + Advanced (3) — optional
@@ -241,13 +237,11 @@ function ExNav({ g }) {
                 borderRadius: 6,
                 background: promoted ? X.accentSoft : 'transparent',
                 opacity: dim ? 0.4 : 1,
-                transition: T(g),
+                transition: T,
               }}
             >
-              <span style={{ width: 5, height: 5, borderRadius: 99, background: promoted ? X.accent : X.line, transition: T(g) }} />
-              <span style={{ fontSize: 12.5, fontWeight: promoted ? 700 : 400, color: promoted ? X.accent : X.ink, transition: T(g) }}>
-                {it}
-              </span>
+              <span style={{ width: 5, height: 5, borderRadius: 99, background: promoted ? X.accent : X.line, transition: T }} />
+              <span style={{ fontSize: 12.5, fontWeight: promoted ? 700 : 400, color: X.ink, transition: T }}>{it}</span>
             </div>
           </div>
         );
@@ -265,11 +259,7 @@ function ExFeed({ g }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {rows.map(([a, b], i) => (
-        <div
-          key={a}
-          className="flex items-center"
-          style={{ gap: 11, height: 58, borderBottom: i < 2 ? `1px solid ${X.line}` : 'none' }}
-        >
+        <div key={a} className="flex items-center" style={{ gap: 11, height: 58, borderBottom: i < 2 ? `1px solid ${X.line}` : 'none' }}>
           <div
             style={{
               width: 22,
@@ -282,16 +272,16 @@ function ExFeed({ g }) {
               fontWeight: 700,
               fontSize: 11,
               flexShrink: 0,
-              transform: g ? 'scale(1.35)' : 'scale(1)',
+              transform: g ? 'scale(1.3)' : 'scale(1)',
               transformOrigin: 'left center',
-              transition: T(g),
+              transition: T,
             }}
           >
             {a[0]}
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: X.ink }}>{a}</div>
-            <div style={{ fontSize: 11.5, color: X.gray, opacity: g ? 1 : 0, transform: g ? 'translateY(0)' : 'translateY(-3px)', transition: T(g) }}>
+            <div style={{ fontSize: 11.5, color: X.gray, opacity: g ? 1 : 0, transform: g ? 'translateY(0)' : 'translateY(-3px)', transition: T }}>
               {b}
             </div>
           </div>
@@ -303,13 +293,13 @@ function ExFeed({ g }) {
 
 function Card({ n, label, caption, children }) {
   return (
-    <div style={{ background: '#F7F3E9', borderRadius: 4, padding: 16, color: INK }}>
+    <div style={{ background: '#FBFBFC', borderRadius: 4, padding: 16, color: INK }}>
       <div className="flex items-center" style={{ gap: 8, marginBottom: 14 }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, color: GREEN }}>{n}</span>
-        <span style={{ fontFamily: MONO, fontSize: 10.5, color: '#9A9985', textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: INK }}>{n}</span>
+        <span style={{ fontFamily: MONO, fontSize: 10.5, color: '#9A9B9E', textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
       </div>
       <div style={{ minHeight: 196 }}>{children}</div>
-      <div style={{ fontSize: 12.5, color: '#5B5C49', marginTop: 14, lineHeight: 1.5 }}>{caption}</div>
+      <div style={{ fontSize: 12.5, color: '#5C5D60', marginTop: 14, lineHeight: 1.5 }}>{caption}</div>
     </div>
   );
 }
@@ -324,7 +314,7 @@ const TAB_CODE = {
     ['  roles:', INK],
     ['    tabular-list:', INK],
     ['      conserved: [rows-are-records, sort-by-header]', onPaper.sub],
-    ['      adaptive:  [density, default-sort]', GREEN],
+    ['      adaptive:  [density, default-sort]', INK],
   ],
   React: [
     ['const cambia = createCambia({ designMd, userId })', INK],
@@ -376,7 +366,7 @@ export default function App() {
   ];
 
   const wrap = { maxWidth: 1080, margin: '0 auto', padding: '0 28px' };
-  const dotted = { textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: GREEN_BRIGHT, textUnderlineOffset: 6 };
+  const dotted = { textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: GREY, textUnderlineOffset: 6 };
 
   return (
     <div style={{ background: PAPER, minHeight: '100%', fontFamily: "'Inter', system-ui, sans-serif", color: INK }}>
@@ -385,11 +375,10 @@ export default function App() {
         html,body,#root{ background:${PAPER}; }
         a{ color:inherit; text-decoration:none; }
         p{ text-wrap:pretty; }
-        @keyframes cambia-spin{ to{ transform:rotate(360deg); } }
         @media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } }
         .serif{ font-family:'Fraunces', Georgia, 'Times New Roman', serif; }
-        .wordmark{ font-family:'Fraunces', Georgia, serif; font-weight:900; font-size:clamp(76px,18vw,220px); line-height:0.84; letter-spacing:-.02em; text-transform:uppercase; margin:0; text-wrap:balance; }
-        .sec-h{ font-family:'Fraunces', Georgia, serif; font-weight:700; font-size:clamp(34px,5vw,62px); line-height:0.98; letter-spacing:-.01em; text-transform:uppercase; margin:0; text-wrap:balance; }
+        .wordmark{ font-family:'Fraunces', Georgia, serif; font-weight:900; font-size:clamp(76px,18vw,224px); line-height:0.84; letter-spacing:-.025em; text-transform:uppercase; margin:0; }
+        .sec-h{ font-family:'Fraunces', Georgia, serif; font-weight:700; font-size:clamp(34px,5vw,62px); line-height:0.98; letter-spacing:-.015em; text-transform:uppercase; margin:0; text-wrap:balance; }
         .feat-h{ font-family:'Fraunces', Georgia, serif; font-weight:700; font-size:clamp(25px,3vw,36px); line-height:1.04; margin:0; text-wrap:balance; }
         .toprow{ display:none; }
         .install-grid{ display:grid; grid-template-columns:1fr; gap:34px; align-items:center; }
@@ -409,7 +398,7 @@ export default function App() {
       <div style={wrap}>
         <div className="flex items-center justify-between" style={{ padding: '22px 0 0', fontSize: 13 }}>
           <div className="flex items-center" style={{ gap: 8 }}>
-            <span style={{ width: 7, height: 7, borderRadius: 99, background: GREEN, display: 'inline-block' }} />
+            <span style={{ width: 7, height: 7, borderRadius: 99, background: INK, display: 'inline-block' }} />
             <span style={{ fontFamily: MONO, fontWeight: 600, letterSpacing: '.04em' }}>cambia</span>
           </div>
           <div className="flex items-center" style={{ gap: 20, fontFamily: MONO, fontSize: 12, color: onPaper.sub }}>
@@ -429,7 +418,7 @@ export default function App() {
         </div>
         <div style={{ borderTop: `1px solid ${onPaper.line}`, paddingTop: 26 }}>
           <Reveal>
-            <Eyebrow color={GREEN}>Open source · MIT · a DESIGN.md extension</Eyebrow>
+            <Eyebrow color={INK}>Open source · MIT · a DESIGN.md extension</Eyebrow>
           </Reveal>
           <Reveal delay={80}>
             <h1 className="wordmark" style={{ marginTop: 12 }}>
@@ -444,7 +433,8 @@ export default function App() {
           </Reveal>
           <Reveal delay={260}>
             <p style={{ fontFamily: MONO, fontSize: 12, color: onPaper.faint, margin: '14px 0 0' }}>
-              /ˈkam.bja/ — Latin <span style={{ color: GREEN }}>cambium</span>, a tree’s living growth layer · “it changes”
+              /ˈkam.bja/ — Latin <span style={{ color: INK, fontWeight: 600 }}>cambium</span>, a tree’s living growth
+              layer · “it changes”
             </p>
           </Reveal>
         </div>
@@ -482,7 +472,7 @@ export default function App() {
               ))}
             </div>
             <div
-              style={{ marginTop: 10, border: `1px solid ${onPaper.line}`, background: '#FBF8F0', padding: '14px 16px', fontFamily: MONO, fontSize: 12, lineHeight: 1.85, whiteSpace: 'pre', overflowX: 'auto' }}
+              style={{ marginTop: 10, border: `1px solid ${onPaper.line}`, background: '#FBFBFC', padding: '14px 16px', fontFamily: MONO, fontSize: 12, lineHeight: 1.85, whiteSpace: 'pre', overflowX: 'auto' }}
             >
               {TAB_CODE[tab].map(([text, color]) => (
                 <div key={text} style={{ color }}>
@@ -496,7 +486,7 @@ export default function App() {
             </p>
           </Reveal>
           <Reveal delay={120}>
-            <Rays size={420} stroke={GREEN} />
+            <Rays size={420} stroke={RAYS_P} />
           </Reveal>
         </div>
       </div>
@@ -509,7 +499,7 @@ export default function App() {
               <h2 className="sec-h" style={{ maxWidth: 620 }}>
                 Born adapted. Then it learns.
               </h2>
-              <span style={{ fontFamily: MONO, fontSize: 11, color: GREEN_BRIGHT, border: `1px solid ${GREEN_BRIGHT}`, padding: '5px 10px', letterSpacing: '.08em' }}>
+              <span style={{ fontFamily: MONO, fontSize: 11, color: PAPER, border: `1px solid ${onInk.line}`, padding: '5px 10px', letterSpacing: '.08em' }}>
                 LIVE ENGINE
               </span>
             </div>
@@ -518,11 +508,11 @@ export default function App() {
             {steps.map(([tag, h, d], i) => (
               <Reveal key={tag} delay={i * 100}>
                 <div style={{ borderTop: `1px solid ${onInk.line}`, paddingTop: 18 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN_BRIGHT, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 16 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 11.5, color: PAPER, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 16 }}>
                     {tag}
                   </div>
-                  <div style={{ marginBottom: 16, opacity: 0.9 }}>
-                    <Rays size={260} stroke={GREEN_BRIGHT} n={88} opacity={0.55} spin={120} />
+                  <div style={{ marginBottom: 16 }}>
+                    <Rays size={260} stroke={RAYS_I} n={64} />
                   </div>
                   <h3 className="feat-h">{h}</h3>
                   <p style={{ fontSize: 14.5, color: onInk.sub, lineHeight: 1.6, margin: '12px 0 0' }}>{d}</p>
@@ -536,7 +526,7 @@ export default function App() {
       {/* what it listens for — paper */}
       <div style={{ ...wrap, paddingTop: 60, paddingBottom: 58 }}>
         <Reveal>
-          <Eyebrow color={GREEN}>§ what it listens for</Eyebrow>
+          <Eyebrow color={INK}>§ what it listens for</Eyebrow>
           <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
             Only the choices you hand it
           </h2>
@@ -552,19 +542,19 @@ export default function App() {
                 className="flex items-center justify-between"
                 style={{ padding: '14px 18px', borderBottom: i < signals.length - 1 ? `1px solid ${onPaper.line}` : 'none', gap: 12 }}
               >
-                <span style={{ fontFamily: MONO, fontSize: 13, color: GREEN }}>{trait}</span>
+                <span style={{ fontFamily: MONO, fontSize: 13, color: INK, fontWeight: 600 }}>{trait}</span>
                 <span style={{ fontSize: 13.5, color: onPaper.sub, textAlign: 'right' }}>{sig}</span>
               </div>
             ))}
           </div>
           <p style={{ fontSize: 14, color: onPaper.sub, marginTop: 16, lineHeight: 1.6, maxWidth: 620 }}>
             Nothing else. <span style={{ color: INK, fontWeight: 600 }}>No mouse tracking, no scroll, no dwell time, no keystrokes</span> —
-            only the discrete choice you forward to <span style={{ fontFamily: MONO, color: GREEN }}>observe()</span>.
+            only the discrete choice you forward to <span style={{ fontFamily: MONO, color: INK }}>observe()</span>.
           </p>
         </Reveal>
       </div>
 
-      {/* across every interface — ink, ivory cards */}
+      {/* across every interface — ink, white cards */}
       <div style={{ background: INK, color: PAPER }}>
         <div style={{ ...wrap, paddingTop: 58, paddingBottom: 58 }}>
           <Reveal>
@@ -600,7 +590,7 @@ export default function App() {
       {/* privacy — paper */}
       <div style={{ ...wrap, paddingTop: 60, paddingBottom: 56 }}>
         <Reveal>
-          <Eyebrow color={GREEN}>§ yours, on your device</Eyebrow>
+          <Eyebrow color={INK}>§ yours, on your device</Eyebrow>
           <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
             Personalization that never phones home
           </h2>
@@ -616,7 +606,7 @@ export default function App() {
           ].map(([h, d], i) => (
             <Reveal key={h} delay={i * 100}>
               <div style={{ borderTop: `1px solid ${INK}`, paddingTop: 16 }}>
-                <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN, marginBottom: 10 }}>{`0${i + 1}`}</div>
+                <div style={{ fontFamily: MONO, fontSize: 11.5, color: INK, marginBottom: 10 }}>{`0${i + 1}`}</div>
                 <div className="serif" style={{ fontSize: 23, fontWeight: 600, marginBottom: 8 }}>{h}</div>
                 <p style={{ fontSize: 14, color: onPaper.sub, lineHeight: 1.6, margin: 0 }}>{d}</p>
               </div>
@@ -662,8 +652,8 @@ export default function App() {
               <Reveal key={pkg} delay={(i % 2) * 90}>
                 <div style={{ background: INK, padding: '20px 20px' }}>
                   <div className="serif" style={{ fontSize: 27, fontWeight: 600, color: PAPER, marginBottom: 4 }}>{name}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 11.5, color: GREEN_BRIGHT, marginBottom: 8 }}>{pkg}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 12, color: onInk.sub }}>{detail}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 11.5, color: onInk.sub, marginBottom: 8 }}>{pkg}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 12, color: onInk.faint }}>{detail}</div>
                 </div>
               </Reveal>
             ))}
@@ -684,7 +674,7 @@ export default function App() {
             <span style={{ fontFamily: MONO, fontSize: 13.5, background: INK, color: PAPER, fontWeight: 600, padding: '12px 18px' }}>
               npx cambia init
             </span>
-            <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md" style={{ fontFamily: MONO, fontSize: 13, color: GREEN }}>
+            <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md" style={{ fontFamily: MONO, fontSize: 13, color: INK, fontWeight: 600 }}>
               read the spec →
             </a>
           </div>
@@ -698,7 +688,7 @@ export default function App() {
           style={{ padding: '24px 0 40px', marginTop: 36, borderTop: `1px solid ${onPaper.line}`, fontFamily: MONO, fontSize: 11.5, color: onPaper.faint, flexWrap: 'wrap', gap: 10 }}
         >
           <span>
-            <span style={{ color: GREEN }}>●</span> cambia · a living layer on DESIGN.md
+            <span style={{ color: INK }}>●</span> cambia · a living layer on DESIGN.md
           </span>
           <span>built on DESIGN.md · MIT · 2026</span>
         </div>
