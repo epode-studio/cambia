@@ -2,13 +2,13 @@ import { createCambia, createLocalStorageStore } from '@cambia/runtime';
 import { CambiaProvider, useCambia } from '@cambia/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-/* ── brutalist Swiss: white ground, near-black Helvetica, one sharp blue.
-      Square corners, thick rules, hard offset shadows, mono-forward. ── */
+/* ── elegant / Renaissance: white ground, Fraunces serif, sharp blue used like
+      precious ultramarine. Hairline rules, generous air, no harsh shadows. ── */
 const WHITE = '#FFFFFF';
 const INK = '#0B0B0D';
 const BLUE = '#1A36FF';
 const BLUE_SOFT = '#E7EAFF';
-const SWISS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+const SERIF = "'Fraunces', Georgia, 'Times New Roman', serif";
 const MONO = "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace";
 const EASE = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
@@ -40,7 +40,7 @@ function makeCambia() {
     localStorage.setItem('cambia-demo-uid', uid);
     store = createLocalStorageStore('cambia-demo');
   } catch {
-    /* SSR / no storage — fall back to in-memory */
+    /* SSR / no storage — in-memory fallback */
   }
   return { engine: createCambia({ designMd: DEMO_DESIGN, userId: uid, store, switchMargin: 1.1 }), uid };
 }
@@ -151,21 +151,21 @@ function LiveDemo({ uid, onForget }) {
     onForget();
     setClicks(0);
   };
-  const btn = (active) => ({
+  const btn = (active, muted) => ({
     fontFamily: MONO,
     fontSize: 12,
     padding: '8px 12px',
     cursor: 'pointer',
-    border: `2px solid ${INK}`,
+    border: `1px solid ${muted ? onPaper.line : INK}`,
     background: active ? BLUE : WHITE,
-    color: active ? WHITE : INK,
+    color: active ? WHITE : muted ? onPaper.sub : INK,
     textTransform: 'uppercase',
     letterSpacing: '.04em',
   });
 
   return (
-    <div style={{ border: `2px solid ${INK}`, background: WHITE, boxShadow: `8px 8px 0 ${BLUE}` }}>
-      <div className="flex items-center justify-between" style={{ borderBottom: `2px solid ${INK}`, padding: '10px 14px', flexWrap: 'wrap', gap: 8 }}>
+    <div style={{ border: `1px solid ${INK}`, background: WHITE }}>
+      <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '11px 16px', flexWrap: 'wrap', gap: 8 }}>
         <span style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em' }}>data-table · role: tabular-list</span>
         <span style={{ fontFamily: MONO, fontSize: 11, color: BLUE }}>density = {density}</span>
       </div>
@@ -182,11 +182,11 @@ function LiveDemo({ uid, onForget }) {
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={r[0]} style={{ borderBottom: i < rows.length - 1 ? `1px solid ${onPaper.line}` : 'none', transition: `all .5s ${EASE}` }}>
-              <td style={{ padding: cellPad, fontFamily: MONO, color: onPaper.sub, transition: `all .5s ${EASE}` }}>{r[0]}</td>
-              <td style={{ padding: cellPad, fontWeight: 600, transition: `all .5s ${EASE}` }}>{r[1]}</td>
-              <td style={{ padding: cellPad, fontVariantNumeric: 'tabular-nums', transition: `all .5s ${EASE}` }}>{r[2]}</td>
-              <td style={{ padding: cellPad, transition: `all .5s ${EASE}` }}>
+            <tr key={r[0]} style={{ borderBottom: i < rows.length - 1 ? `1px solid ${onPaper.line}` : 'none' }}>
+              <td style={{ padding: cellPad, fontFamily: MONO, color: onPaper.sub, transition: `padding .5s ${EASE}` }}>{r[0]}</td>
+              <td style={{ padding: cellPad, fontWeight: 600, transition: `padding .5s ${EASE}` }}>{r[1]}</td>
+              <td style={{ padding: cellPad, fontVariantNumeric: 'tabular-nums', transition: `padding .5s ${EASE}` }}>{r[2]}</td>
+              <td style={{ padding: cellPad, transition: `padding .5s ${EASE}` }}>
                 <span style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em', border: `1px solid ${INK}`, padding: '2px 6px' }}>{r[3]}</span>
               </td>
             </tr>
@@ -194,7 +194,7 @@ function LiveDemo({ uid, onForget }) {
         </tbody>
       </table>
 
-      <div className="flex items-center" style={{ gap: 8, padding: '12px 14px', borderTop: `2px solid ${INK}`, flexWrap: 'wrap' }}>
+      <div className="flex items-center" style={{ gap: 8, padding: '12px 14px', borderTop: `1px solid ${INK}`, flexWrap: 'wrap' }}>
         <span style={{ fontFamily: MONO, fontSize: 11, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em', marginRight: 4 }}>you choose:</span>
         <button type="button" style={btn(!comfortable)} onClick={() => pick('compact')}>
           compact
@@ -202,7 +202,7 @@ function LiveDemo({ uid, onForget }) {
         <button type="button" style={btn(comfortable)} onClick={() => pick('comfortable')}>
           comfortable
         </button>
-        <button type="button" style={{ ...btn(false), marginLeft: 'auto', borderColor: onPaper.line, color: onPaper.sub }} onClick={reset}>
+        <button type="button" style={{ ...btn(false, true), marginLeft: 'auto' }} onClick={reset}>
           forget me
         </button>
       </div>
@@ -415,15 +415,32 @@ const TAB_CODE = {
   ],
 };
 
-export default function App() {
+function Site({ engine, uid }) {
   const [g, setG] = useState(false);
   const [tab, setTab] = useState('DESIGN.md');
   const [copied, setCopied] = useState(false);
-  const [{ engine, uid }] = useState(() => makeCambia());
+  /* the WHOLE page reads the live trait — its vertical rhythm personalizes with you */
+  const { values } = useCambia('tabular-list');
+  const density = values.density || 'compact';
+  const comfortable = density === 'comfortable';
+  const D = comfortable ? 1.26 : 1;
+  const sx = (top, bottom) => ({
+    paddingTop: Math.round(top * D),
+    paddingBottom: Math.round(bottom * D),
+    transition: `padding .6s ${EASE}`,
+  });
 
   useEffect(() => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href =
+      'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap';
+    document.head.appendChild(l);
     const iv = setInterval(() => setG((x) => !x), 3400);
-    return () => clearInterval(iv);
+    return () => {
+      document.head.removeChild(l);
+      clearInterval(iv);
+    };
   }, []);
 
   const copy = () => {
@@ -463,34 +480,49 @@ export default function App() {
         html,body,#root{ background:${WHITE}; }
         a{ color:inherit; text-decoration:none; }
         p{ text-wrap:pretty; }
+        .flex{ display:flex; }
+        .items-center{ align-items:center; }
+        .justify-between{ justify-content:space-between; }
         @keyframes bloomPulse{ 0%,100%{ opacity:.16 } 50%{ opacity:1 } }
         .bloom-cell{ animation-name:bloomPulse; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
         @media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } .bloom-cell{ opacity:1!important; } }
-        .h-hero{ font-family:${SWISS}; font-weight:800; font-size:clamp(46px,7.4vw,104px); line-height:0.92; letter-spacing:-.035em; text-transform:uppercase; margin:0; text-wrap:balance; }
-        .sec-h{ font-family:${SWISS}; font-weight:800; font-size:clamp(30px,4.8vw,58px); line-height:0.95; letter-spacing:-.025em; text-transform:uppercase; margin:0; text-wrap:balance; }
-        .feat-h{ font-family:${SWISS}; font-weight:700; font-size:clamp(22px,2.7vw,31px); line-height:1.0; letter-spacing:-.018em; text-transform:uppercase; margin:0; text-wrap:balance; }
+        .h-hero{ font-family:${SERIF}; font-weight:600; font-size:clamp(44px,6.4vw,90px); line-height:0.99; letter-spacing:-.02em; margin:0; text-wrap:balance; }
+        .sec-h{ font-family:${SERIF}; font-weight:600; font-size:clamp(30px,4.4vw,54px); line-height:1.0; letter-spacing:-.015em; margin:0; text-wrap:balance; }
+        .feat-h{ font-family:${SERIF}; font-weight:600; font-size:clamp(22px,2.6vw,31px); line-height:1.06; letter-spacing:-.01em; margin:0; text-wrap:balance; }
         .hero-grid{ display:grid; grid-template-columns:1fr; gap:36px; align-items:center; }
         .triptych{ display:grid; grid-template-columns:1fr; gap:34px; }
         .figs{ display:grid; grid-template-columns:1fr; gap:16px; }
-        .pkgs{ display:grid; grid-template-columns:1fr; gap:0; }
-        .demo-grid{ display:grid; grid-template-columns:1fr; gap:30px; align-items:start; }
+        .pkgs{ display:grid; grid-template-columns:1fr; gap:1px; }
+        .demo-grid{ display:grid; grid-template-columns:1fr; gap:30px; align-items:center; }
         @media (min-width:900px){
           .hero-grid{ grid-template-columns:1.08fr 0.92fr; gap:44px; }
           .triptych{ grid-template-columns:1fr 1fr 1fr; gap:28px; }
           .figs{ grid-template-columns:1fr 1fr; }
           .pkgs{ grid-template-columns:1fr 1fr; }
-          .demo-grid{ grid-template-columns:0.9fr 1.1fr; gap:40px; }
+          .demo-grid{ grid-template-columns:0.92fr 1.08fr; gap:40px; }
         }
       `}</style>
 
       {/* nav */}
       <div style={wrap}>
-        <div className="flex items-center justify-between" style={{ padding: '20px 0 16px', fontSize: 13, borderBottom: `3px solid ${INK}` }}>
+        <div className="flex items-center justify-between" style={{ padding: '20px 0 16px', fontSize: 13, borderBottom: `1px solid ${INK}`, flexWrap: 'wrap', gap: 10 }}>
           <div className="flex items-center" style={{ gap: 9 }}>
             <span style={{ width: 9, height: 9, background: BLUE, display: 'inline-block' }} />
             <span style={{ fontFamily: MONO, fontWeight: 700, letterSpacing: '.04em' }}>cambia</span>
           </div>
-          <div className="flex items-center" style={{ gap: 20, fontFamily: MONO, fontSize: 12, color: onPaper.sub }}>
+          <div className="flex items-center" style={{ gap: 16, fontFamily: MONO, fontSize: 12, color: onPaper.sub }}>
+            <span
+              style={{
+                fontSize: 11,
+                color: comfortable ? BLUE : onPaper.faint,
+                border: `1px solid ${comfortable ? BLUE : onPaper.line}`,
+                padding: '3px 8px',
+                letterSpacing: '.04em',
+                transition: `all .4s ${EASE}`,
+              }}
+            >
+              ▦ adapting to you · {density}
+            </span>
             <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md">spec</a>
             <a href="https://github.com/epode-studio/cambia/tree/main/docs-site">docs</a>
             <a href="https://github.com/epode-studio/cambia">github</a>
@@ -499,7 +531,7 @@ export default function App() {
       </div>
 
       {/* hero */}
-      <div style={{ ...wrap, paddingTop: 44 }}>
+      <div style={{ ...wrap, ...sx(44, 0) }}>
         <div className="hero-grid">
           <div>
             <Reveal>
@@ -523,25 +555,24 @@ export default function App() {
                   type="button"
                   onClick={copy}
                   className="flex items-center justify-between"
-                  style={{ width: '100%', maxWidth: 460, marginTop: 12, border: `2px solid ${INK}`, background: WHITE, padding: '13px 16px', gap: 12, cursor: 'pointer', color: INK, boxShadow: `5px 5px 0 ${INK}` }}
+                  style={{ width: '100%', maxWidth: 460, marginTop: 12, border: `1px solid ${INK}`, background: WHITE, padding: '13px 16px', gap: 12, cursor: 'pointer', color: INK }}
                 >
                   <span style={{ fontFamily: MONO, fontSize: 13.5 }}>npx cambia init</span>
                   <span style={{ fontFamily: MONO, fontSize: 12, color: copied ? BLUE : onPaper.faint }}>{copied ? 'copied ✓' : '⧉ copy'}</span>
                 </button>
-                <div className="flex items-center" style={{ gap: 0, marginTop: 16, flexWrap: 'wrap' }}>
+                <div className="flex items-center" style={{ gap: 6, marginTop: 16, flexWrap: 'wrap' }}>
                   {Object.keys(TAB_CODE).map((t) => (
                     <button
                       key={t}
                       type="button"
                       onClick={() => setTab(t)}
-                      style={{ cursor: 'pointer', border: `2px solid ${INK}`, borderRight: 'none', background: tab === t ? BLUE : WHITE, color: tab === t ? WHITE : INK, padding: '6px 12px', fontFamily: MONO, fontSize: 11.5, transition: `all .2s ${EASE}` }}
+                      style={{ cursor: 'pointer', border: `1px solid ${INK}`, background: tab === t ? BLUE : WHITE, color: tab === t ? WHITE : INK, padding: '6px 12px', fontFamily: MONO, fontSize: 11.5, transition: `all .2s ${EASE}` }}
                     >
                       {t}
                     </button>
                   ))}
-                  <span style={{ borderLeft: `2px solid ${INK}` }} />
                 </div>
-                <div style={{ marginTop: 0, maxWidth: 520, border: `2px solid ${INK}`, background: '#FAFAFB', padding: '14px 16px', fontFamily: MONO, fontSize: 12, lineHeight: 1.85, whiteSpace: 'pre', overflowX: 'auto' }}>
+                <div style={{ marginTop: 12, maxWidth: 520, border: `1px solid ${INK}`, background: '#FAFAFB', padding: '14px 16px', fontFamily: MONO, fontSize: 12, lineHeight: 1.85, whiteSpace: 'pre', overflowX: 'auto' }}>
                   {TAB_CODE[tab].map(([text, color]) => (
                     <div key={text} style={{ color }}>
                       {text}
@@ -558,7 +589,7 @@ export default function App() {
       </div>
 
       {/* LIVE — this page runs on cambia */}
-      <div style={{ ...wrap, paddingTop: 70 }}>
+      <div style={{ ...wrap, ...sx(70, 0) }}>
         <div className="demo-grid">
           <Reveal>
             <Eyebrow color={BLUE}>§ this page runs on cambia</Eyebrow>
@@ -567,35 +598,36 @@ export default function App() {
             </h2>
             <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 0', maxWidth: 460, lineHeight: 1.55 }}>
               The table on the right is driven by <span style={{ fontFamily: MONO, color: INK }}>@cambia/runtime</span>,
-              scoped to you. It’s <strong>born-adapted compact</strong> (analytics archetype). Pick{' '}
-              <strong>comfortable</strong> a few times — once the pattern is clear (anti-thrash), it switches and{' '}
-              <strong>persists in your browser</strong>. Reload: it remembers. The conserved grammar — rows are records,
-              sort by header — never changes. Hit <span style={{ fontFamily: MONO, color: INK }}>forget me</span> to wipe it.
+              scoped to you. It’s born-adapted <strong>compact</strong> (analytics archetype). Pick{' '}
+              <strong>comfortable</strong> a few times — once the pattern is clear (anti-thrash), it switches and
+              persists in your browser. Reload: it remembers. The conserved grammar — rows are records, sort by header —
+              never changes. <span style={{ fontFamily: MONO, color: INK }}>forget me</span> wipes it.
+            </p>
+            <p style={{ fontSize: 13, color: onPaper.faint, marginTop: 14, lineHeight: 1.5 }}>
+              The whole page is wired to the same trait — watch its spacing breathe when the table switches.
             </p>
           </Reveal>
           <Reveal delay={120}>
-            <CambiaProvider value={engine}>
-              <LiveDemo uid={uid} onForget={() => engine.forget()} />
-            </CambiaProvider>
+            <LiveDemo uid={uid} onForget={() => engine.forget()} />
           </Reveal>
         </div>
       </div>
 
       {/* how it works — sharp blue block */}
-      <div style={{ background: BLUE, color: WHITE, marginTop: 72 }}>
-        <div style={{ ...wrap, paddingTop: 58, paddingBottom: 60 }}>
+      <div style={{ background: BLUE, color: WHITE, marginTop: Math.round(72 * D), transition: `margin .6s ${EASE}` }}>
+        <div style={{ ...wrap, ...sx(58, 60) }}>
           <Reveal>
             <div className="flex items-center justify-between" style={{ marginBottom: 40, flexWrap: 'wrap', gap: 12 }}>
               <h2 className="sec-h" style={{ maxWidth: 660 }}>
                 Born-adapted, then personalized
               </h2>
-              <span style={{ fontFamily: MONO, fontSize: 11, color: WHITE, border: `2px solid ${WHITE}`, padding: '5px 10px', letterSpacing: '.08em' }}>LIVE ENGINE</span>
+              <span style={{ fontFamily: MONO, fontSize: 11, color: WHITE, border: `1px solid ${WHITE}`, padding: '5px 10px', letterSpacing: '.08em' }}>LIVE ENGINE</span>
             </div>
           </Reveal>
           <div className="triptych">
             {steps.map(([tag, h, d], i) => (
               <Reveal key={tag} delay={i * 100}>
-                <div style={{ borderTop: `2px solid ${WHITE}`, paddingTop: 18 }}>
+                <div style={{ borderTop: `1px solid ${WHITE}`, paddingTop: 18 }}>
                   <div style={{ fontFamily: MONO, fontSize: 11.5, color: WHITE, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 }}>{tag}</div>
                   <div style={{ marginBottom: 14, maxWidth: 150 }}>
                     <GridBloom size={150} cols={22} dark cycle={13} />
@@ -610,7 +642,7 @@ export default function App() {
       </div>
 
       {/* what it listens for — white */}
-      <div style={{ ...wrap, paddingTop: 60, paddingBottom: 58 }}>
+      <div style={{ ...wrap, ...sx(60, 58) }}>
         <Reveal>
           <Eyebrow color={BLUE}>§ what it listens for</Eyebrow>
           <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
@@ -621,9 +653,9 @@ export default function App() {
           </p>
         </Reveal>
         <Reveal delay={80}>
-          <div style={{ border: `2px solid ${INK}`, maxWidth: 720 }}>
+          <div style={{ border: `1px solid ${INK}`, maxWidth: 720 }}>
             {signals.map(([trait, sig], i) => (
-              <div key={trait} className="flex items-center justify-between" style={{ padding: '14px 18px', borderBottom: i < signals.length - 1 ? `1px solid ${onPaper.line}` : 'none', gap: 12 }}>
+              <div key={trait} className="flex items-center justify-between" style={{ padding: '14px 18px', borderBottom: i < signals.length - 1 ? `1px solid ${onPaper.line}` : 'none', gap: 16 }}>
                 <span style={{ fontFamily: MONO, fontSize: 13, color: BLUE, fontWeight: 600 }}>{trait}</span>
                 <span style={{ fontSize: 13.5, color: onPaper.sub, textAlign: 'right' }}>{sig}</span>
               </div>
@@ -638,7 +670,7 @@ export default function App() {
 
       {/* across every interface — blue block, white cards */}
       <div style={{ background: BLUE, color: WHITE }}>
-        <div style={{ ...wrap, paddingTop: 58, paddingBottom: 58 }}>
+        <div style={{ ...wrap, ...sx(58, 58) }}>
           <Reveal>
             <Eyebrow color={onBlue.faint}>§ one engine, every component</Eyebrow>
             <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 640 }}>
@@ -667,7 +699,7 @@ export default function App() {
       </div>
 
       {/* privacy — white */}
-      <div style={{ ...wrap, paddingTop: 60, paddingBottom: 56 }}>
+      <div style={{ ...wrap, ...sx(60, 56) }}>
         <Reveal>
           <Eyebrow color={BLUE}>§ on the device</Eyebrow>
           <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
@@ -684,9 +716,9 @@ export default function App() {
             ['Erasable in one call', 'cambia.forget(userId) deletes a user’s state and reverts the UI to born-adapted defaults. See PRIVACY.md.'],
           ].map(([h, d], i) => (
             <Reveal key={h} delay={i * 100}>
-              <div style={{ borderTop: `2px solid ${INK}`, paddingTop: 16 }}>
+              <div style={{ borderTop: `1px solid ${INK}`, paddingTop: 16 }}>
                 <div style={{ fontFamily: MONO, fontSize: 11.5, color: BLUE, marginBottom: 10 }}>{`0${i + 1}`}</div>
-                <div className="feat-h" style={{ fontSize: 19, marginBottom: 8 }}>{h}</div>
+                <div className="feat-h" style={{ fontSize: 21, marginBottom: 8 }}>{h}</div>
                 <p style={{ fontSize: 14, color: onPaper.sub, lineHeight: 1.6, margin: 0 }}>{d}</p>
               </div>
             </Reveal>
@@ -696,13 +728,13 @@ export default function App() {
 
       {/* tailwind + packages — blue block */}
       <div style={{ background: BLUE, color: WHITE }}>
-        <div style={{ ...wrap, paddingTop: 56, paddingBottom: 60 }}>
+        <div style={{ ...wrap, ...sx(56, 60) }}>
           <Reveal>
             <Eyebrow color={onBlue.faint}>§ tailwind, in sync</Eyebrow>
             <h2 className="sec-h" style={{ marginTop: 14, maxWidth: 720 }}>
               One source of truth for tokens
             </h2>
-            <div style={{ marginTop: 22, border: `2px solid ${WHITE}`, padding: '16px 18px', fontFamily: MONO, fontSize: 12.5, lineHeight: 1.9, maxWidth: 720, whiteSpace: 'pre', overflowX: 'auto' }}>
+            <div style={{ marginTop: 22, border: `1px solid ${WHITE}`, padding: '16px 18px', fontFamily: MONO, fontSize: 12.5, lineHeight: 1.9, maxWidth: 720, whiteSpace: 'pre', overflowX: 'auto' }}>
               <div>
                 <span style={{ color: onBlue.faint }}>$ </span>npx cambia tailwind --out cambia.theme.js
                 <span style={{ color: onBlue.faint }}>{'   # DESIGN.md tokens → Tailwind'}</span>
@@ -723,11 +755,11 @@ export default function App() {
               Declare it, then make it live
             </h2>
           </Reveal>
-          <div className="pkgs" style={{ border: `2px solid ${WHITE}` }}>
-            {packages.map(([name, pkg, detail], i) => (
-              <Reveal key={pkg} delay={(i % 2) * 90}>
-                <div style={{ background: BLUE, padding: '20px 20px', borderRight: `1px solid ${onBlue.line}`, borderBottom: `1px solid ${onBlue.line}` }}>
-                  <div style={{ fontFamily: SWISS, fontSize: 24, fontWeight: 800, color: WHITE, marginBottom: 4, letterSpacing: '-.01em', textTransform: 'uppercase' }}>{name}</div>
+          <div className="pkgs" style={{ border: `1px solid ${WHITE}`, background: onBlue.line }}>
+            {packages.map(([name, pkg, detail]) => (
+              <Reveal key={pkg}>
+                <div style={{ background: BLUE, padding: '20px 20px', height: '100%' }}>
+                  <div style={{ fontFamily: SERIF, fontSize: 27, fontWeight: 600, color: WHITE, marginBottom: 4, letterSpacing: '-.01em' }}>{name}</div>
                   <div style={{ fontFamily: MONO, fontSize: 11.5, color: WHITE, marginBottom: 8 }}>{pkg}</div>
                   <div style={{ fontFamily: MONO, fontSize: 12, color: onBlue.sub }}>{detail}</div>
                 </div>
@@ -738,7 +770,7 @@ export default function App() {
       </div>
 
       {/* close — white */}
-      <div style={{ ...wrap, paddingTop: 72, paddingBottom: 40 }}>
+      <div style={{ ...wrap, ...sx(72, 40) }}>
         <Reveal>
           <h2 className="sec-h" style={{ maxWidth: 880 }}>
             Personalize your interface, on-device
@@ -747,7 +779,7 @@ export default function App() {
             <button
               type="button"
               onClick={copy}
-              style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 18px', border: `2px solid ${INK}`, cursor: 'pointer', boxShadow: `5px 5px 0 ${INK}` }}
+              style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 20px', border: `1px solid ${BLUE}`, cursor: 'pointer' }}
             >
               {copied ? 'copied ✓' : 'npx cambia init  ⧉'}
             </button>
@@ -760,7 +792,7 @@ export default function App() {
 
       {/* footer */}
       <div style={wrap}>
-        <div className="flex items-center justify-between" style={{ padding: '24px 0 40px', marginTop: 36, borderTop: `3px solid ${INK}`, fontFamily: MONO, fontSize: 11.5, color: onPaper.faint, flexWrap: 'wrap', gap: 10 }}>
+        <div className="flex items-center justify-between" style={{ padding: '24px 0 40px', marginTop: 36, borderTop: `1px solid ${INK}`, fontFamily: MONO, fontSize: 11.5, color: onPaper.faint, flexWrap: 'wrap', gap: 10 }}>
           <span>
             <span style={{ color: BLUE }}>■</span> cambia · a living layer on DESIGN.md
           </span>
@@ -768,5 +800,14 @@ export default function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  const [{ engine, uid }] = useState(() => makeCambia());
+  return (
+    <CambiaProvider value={engine}>
+      <Site engine={engine} uid={uid} />
+    </CambiaProvider>
   );
 }
