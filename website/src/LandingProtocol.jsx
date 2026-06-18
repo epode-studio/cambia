@@ -603,6 +603,205 @@ function Scrolly({ profileLabel }) {
   );
 }
 
+/* ── the wow showcase: an auto-cycling persona "stories" reel of a rich mini-app
+      that physically reflows + highlights what changed as it morphs. ── */
+const galleryEngines = {};
+function galleryValues(pid) {
+  if (!galleryEngines[pid]) {
+    const profile = PROFILES.find((p) => p.id === pid) || PROFILES[0];
+    const engine = createCambia({ designMd: DEMO_DESIGN, userId: `gallery-${pid}`, switchMargin: 1.1 });
+    if (profile.seed?.length) {
+      const role = engine.role('tabular-list');
+      for (const [t, v, n] of profile.seed) for (let i = 0; i < n; i++) role.observe({ trait: t, value: v });
+    }
+    galleryEngines[pid] = engine;
+  }
+  const v = galleryEngines[pid].role('tabular-list').values();
+  return { density: v.density || 'compact', priority: v['default-sort'] === 'total' ? 'value' : 'recency' };
+}
+
+const MINI_METRICS = [
+  { k: 'Revenue', v: '$284k', kind: 'value', bars: [5, 7, 6, 9, 8, 11, 13] },
+  { k: 'New users', v: '+412', kind: 'recency', bars: [3, 4, 6, 5, 8, 10, 14] },
+  { k: 'Orders', v: '1,847', kind: 'value', bars: [8, 7, 9, 8, 10, 9, 12] },
+  { k: 'Active now', v: '38', kind: 'recency', bars: [6, 9, 7, 11, 8, 12, 10] },
+];
+const MINI_ROWS = [
+  { name: 'Aurora Labs', amt: 2480, when: 2 },
+  { name: 'Fjord Supply', amt: 1205, when: 5 },
+  { name: 'Bjørk Studio', amt: 960, when: 1 },
+  { name: 'Kestrel Co', amt: 540, when: 4 },
+];
+
+function MiniApp({ pid }) {
+  const { density, priority } = galleryValues(pid);
+  const comf = density === 'comfortable';
+  // promote the metric that matches this persona's priority; it leads, enlarges, charts.
+  const heroIdx = MINI_METRICS.findIndex((m) => m.kind === priority);
+  const others = MINI_METRICS.map((_, i) => i).filter((i) => i !== heroIdx);
+  const hero = MINI_METRICS[heroIdx];
+  // rank rows: value-first by amount, recency-first by recency
+  const rowH = comf ? 52 : 38;
+  const ranked = MINI_ROWS.map((r, i) => ({ ...r, i })).sort((a, b) => (priority === 'value' ? b.amt - a.amt : a.when - b.when));
+  const rankOf = new Map(ranked.map((r, rank) => [r.i, rank]));
+
+  return (
+    <div style={{ border: `1px solid ${INK}`, background: WHITE, width: '100%', maxWidth: 460 }}>
+      {/* app chrome */}
+      <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '9px 14px', background: '#F6F6F8' }}>
+        <span className="flex items-center" style={{ gap: 6 }}>
+          {[0, 1, 2].map((d) => (
+            <span key={d} style={{ width: 8, height: 8, borderRadius: 99, border: `1px solid ${onPaper.faint}` }} />
+          ))}
+          <span style={{ fontFamily: MONO, fontSize: 10, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em', marginLeft: 4 }}>acme analytics</span>
+        </span>
+        <span style={{ fontFamily: MONO, fontSize: 10, color: BLUE }}>{density}</span>
+      </div>
+
+      <div style={{ padding: comf ? 16 : 12, transition: `padding .6s ${EASE}` }}>
+        {/* hero metric + chart */}
+        <div key={`hero-${pid}`} className="changed" style={{ border: `1px solid ${BLUE}`, background: BLUE_SOFT, padding: comf ? '14px 16px' : '10px 14px', marginBottom: 10 }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <div style={{ fontFamily: MONO, fontSize: 9.5, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.05em' }}>{hero.k}</div>
+              <div style={{ fontFamily: SERIF, fontWeight: 600, fontSize: comf ? 30 : 25, color: INK, lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{hero.v}</div>
+            </div>
+            <svg width="118" height="44" viewBox="0 0 118 44" style={{ overflow: 'visible' }}>
+              <title>chart</title>
+              {hero.bars.map((h, i) => (
+                <rect
+                  key={i}
+                  className="grow-bar"
+                  x={i * 17}
+                  y={44 - h * 3}
+                  width={11}
+                  height={h * 3}
+                  fill={BLUE}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                />
+              ))}
+            </svg>
+          </div>
+        </div>
+
+        {/* secondary metrics */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+          {others.map((i) => {
+            const m = MINI_METRICS[i];
+            return (
+              <div key={m.k} style={{ border: `1px solid ${X.line}`, padding: '7px 9px' }}>
+                <div style={{ fontFamily: MONO, fontSize: 8.5, color: X.faint, textTransform: 'uppercase', letterSpacing: '.04em' }}>{m.k}</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: INK, fontVariantNumeric: 'tabular-nums' }}>{m.v}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* reflowing list */}
+        <div style={{ fontFamily: MONO, fontSize: 9.5, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>
+          {priority === 'value' ? 'top accounts' : 'latest activity'}
+        </div>
+        <div style={{ position: 'relative', height: MINI_ROWS.length * rowH, transition: `height .6s ${EASE}` }}>
+          {MINI_ROWS.map((r, i) => {
+            const rank = rankOf.get(i) ?? i;
+            const top = rank === 0;
+            return (
+              <div
+                key={r.name}
+                className={top ? 'changed' : ''}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: rowH - 6,
+                  transform: `translateY(${rank * rowH}px)`,
+                  transition: `transform .6s ${EASE}, height .6s ${EASE}`,
+                  borderBottom: `1px solid ${X.line}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                }}
+              >
+                <span style={{ width: comf ? 26 : 20, height: comf ? 26 : 20, flexShrink: 0, background: top ? BLUE : BLUE_SOFT, color: top ? WHITE : BLUE, display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 11, transition: `all .5s ${EASE}` }}>
+                  {r.name[0]}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: INK, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: priority === 'value' ? BLUE : onPaper.sub, fontVariantNumeric: 'tabular-nums' }}>
+                  {priority === 'value' ? `$${r.amt.toLocaleString('en-US')}` : `${r.when}h ago`}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StoryGallery() {
+  const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const DWELL = 4200;
+  useEffect(() => {
+    if (reduce || paused) return;
+    const t = setTimeout(() => setIdx((i) => (i + 1) % PROFILES.length), DWELL);
+    return () => clearTimeout(t);
+  }, [idx, paused, reduce]);
+  const profile = PROFILES[idx];
+  const desc = {
+    new: 'A brand-new visitor — sensible defaults, nothing learned yet.',
+    skimmer: 'Likes room to read — the layout opens up for them.',
+    analyst: 'Lives in the numbers — money leads and sorts to the top.',
+    you: 'That’s you — your choices on this page, saved in your browser.',
+  };
+
+  return (
+    <div
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      style={{ width: '100%', maxWidth: 460 }}
+    >
+      {/* story progress bars */}
+      <div className="flex" style={{ gap: 6, marginBottom: 14 }}>
+        {PROFILES.map((p, i) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => setIdx(i)}
+            style={{ flex: 1, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+          >
+            <div style={{ height: 3, background: onPaper.line, overflow: 'hidden' }}>
+              <div
+                className={i === idx && !reduce ? 'story-fill' : ''}
+                style={{
+                  height: '100%',
+                  background: BLUE,
+                  width: i < idx ? '100%' : i === idx ? (reduce ? '100%' : '0%') : '0%',
+                  animationDuration: `${DWELL}ms`,
+                  animationPlayState: paused ? 'paused' : 'running',
+                }}
+              />
+            </div>
+            <span style={{ fontFamily: MONO, fontSize: 10, color: i === idx ? INK : onPaper.faint, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 6, display: 'block' }}>
+              {p.label}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <MiniApp pid={profile.id} />
+
+      <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11.5, color: onPaper.sub, lineHeight: 1.6, minHeight: 34 }}>
+        <span style={{ color: BLUE }}>{profile.label}.</span> {desc[profile.id]}
+        <span style={{ color: onPaper.faint }}> {paused ? '· paused' : '· auto-playing'}</span>
+      </div>
+    </div>
+  );
+}
+
 function Site({ engine, uid, profile, pid, setPid }) {
   const [tab, setTab] = useState('DESIGN.md');
   const [copied, setCopied] = useState(false);
@@ -851,39 +1050,28 @@ function Site({ engine, uid, profile, pid, setPid }) {
         <Scrolly profileLabel={profile.label} />
       </div>
 
-      {/* now you try — the whole page IS the demo; this is the preview output */}
+      {/* the wow showcase — same app, every kind of user */}
       <div id="try" style={{ ...wrap, ...sx(64, 0) }}>
-        <Reveal>
-          <div className="flex items-center justify-between" style={{ marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
-            <div>
-              <Eyebrow color={BLUE}>§ the whole site runs on cambia</Eyebrow>
-              <h2 className="sec-h" style={{ marginTop: 12, maxWidth: 620 }}>
-                You’re already in the demo
-              </h2>
-            </div>
-            <p style={{ fontSize: 13.5, color: onPaper.sub, maxWidth: 360, lineHeight: 1.55, alignSelf: 'flex-end' }}>
-              The bar up top sets who’s using this site — its spacing, this preview, everything follows. Try{' '}
-              <span style={{ fontFamily: MONO, color: INK }}>You</span>: your choices save in this browser and persist on reload.
+        <div className="demo-grid">
+          <Reveal>
+            <Eyebrow color={BLUE}>§ a different app for everyone</Eyebrow>
+            <h2 className="sec-h" style={{ marginTop: 14 }}>
+              One design, reshaped for each person
+            </h2>
+            <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 0', maxWidth: 440, lineHeight: 1.55 }}>
+              The same dashboard, rendered for four different people — watch it re-rank, promote
+              what each one cares about, and loosen or tighten as it goes. Every frame is the{' '}
+              <span style={{ fontFamily: MONO, color: INK }}>@cambia/runtime</span> engine; the conserved
+              layout never moves.
             </p>
-          </div>
-        </Reveal>
-        <Reveal delay={100}>
-          <div style={{ maxWidth: 640 }}>
-            <PreviewTable density={density} sort={sort} profile={profile} />
-            <div className="flex items-center justify-between" style={{ marginTop: 12, flexWrap: 'wrap', gap: 10 }}>
-              <span style={{ fontFamily: MONO, fontSize: 11.5, color: onPaper.faint, lineHeight: 1.6 }}>
-                {profile.persistent ? 'saved in your browser' : 'in-memory'} · conserved grammar fixed · adapts only what you declared
-              </span>
-              <button
-                type="button"
-                onClick={() => engine.forget()}
-                style={{ fontFamily: MONO, fontSize: 11.5, padding: '7px 13px', cursor: 'pointer', border: `1px solid ${onPaper.line}`, background: WHITE, color: onPaper.sub, textTransform: 'uppercase', letterSpacing: '.04em' }}
-              >
-                ↺ forget {profile.label}
-              </button>
-            </div>
-          </div>
-        </Reveal>
+            <p style={{ fontSize: 13, color: onPaper.faint, marginTop: 14, lineHeight: 1.5 }}>
+              Auto-playing — hover to pause, tap a name to jump. Set it for the whole site in the bar at the top.
+            </p>
+          </Reveal>
+          <Reveal delay={120}>
+            <StoryGallery />
+          </Reveal>
+        </div>
       </div>
 
       {/* add one block — the install / code */}
