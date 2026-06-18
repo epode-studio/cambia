@@ -1,4 +1,4 @@
-import type { Cambia, Observation, RoleValues } from '@cambia/runtime';
+import type { Cambia, Observation, RoleValues } from '@epode/cambia-runtime';
 import { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
 
 const CambiaContext = createContext<Cambia | null>(null);
@@ -37,4 +37,4 @@ export function useCambia(roleName: string): UseCambiaResult {
   return { values, observe };
 }
 
-export type { Cambia, Observation, RoleValues } from '@cambia/runtime';
+export type { Cambia, Observation, RoleValues } from '@epode/cambia-runtime';

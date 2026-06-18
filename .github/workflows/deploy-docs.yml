@@ -41,7 +41,7 @@ jobs:
 
       - name: Build docs
         if: env.CF_TOKEN != ''
-        run: bun run --filter='@cambia/docs-site' build
+        run: bun run --filter='@epode/cambia-docs-site' build
 
       - name: Deploy to Cloudflare Pages
         if: env.CF_TOKEN != ''

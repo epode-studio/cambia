@@ -11,7 +11,7 @@ import {
   tokensToTailwind,
   type ValidationResult,
   validate,
-} from '@cambia/core';
+} from '@epode/cambia-core';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)); // packages/cli/dist
 const PKG_ROOT = path.join(HERE, '..');
@@ -32,18 +32,18 @@ cambia — a DESIGN.md extension that makes a design system role-aware and
 keep using \`@google/design.md\` for the visual layer; \`cambia\` handles the layer above.
 
 Usage:
-  npx cambia init [--file DESIGN.md] [--dry-run]   Add a cambia: extension to a DESIGN.md
-  npx cambia check [DESIGN.md]                     Validate the cambia: extension
-  npx cambia tailwind [--file DESIGN.md]           Generate a Tailwind theme from DESIGN.md tokens
+  npx @epode/cambia init [--file DESIGN.md] [--dry-run]   Add a cambia: extension to a DESIGN.md
+  npx @epode/cambia check [DESIGN.md]                     Validate the cambia: extension
+  npx @epode/cambia tailwind [--file DESIGN.md]           Generate a Tailwind theme from DESIGN.md tokens
             [--out FILE] [--check FILE] [--format esm|cjs|json]
-  npx cambia skill [claude|cursor]                 Install the agent skill/rule into your project
-  npx cambia help                                  Show this help
-  npx cambia --version                             Print the version
+  npx @epode/cambia skill [claude|cursor]                 Install the agent skill/rule into your project
+  npx @epode/cambia help                                  Show this help
+  npx @epode/cambia --version                             Print the version
 
 Typical flow:
   npx @google/design.md lint DESIGN.md   # validate the visual layer (Google)
-  npx cambia init                        # add roles + adaptive layer (Cambia)
-  npx cambia check                       # validate the Cambia layer
+  npx @epode/cambia init                        # add roles + adaptive layer (Cambia)
+  npx @epode/cambia check                       # validate the Cambia layer
 `);
 }
 

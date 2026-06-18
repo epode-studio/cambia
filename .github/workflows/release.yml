@@ -32,13 +32,23 @@ jobs:
       - name: Test
         run: bun run test
 
-      # @cambia/core must publish before the cambia CLI that depends on it.
-      - name: Publish @cambia/core
-        run: npm publish --access public --workspace @cambia/core
+      # Publish in dependency order: core → runtime → react → cli.
+      - name: Publish @epode/cambia-core
+        run: npm publish --access public --workspace @epode/cambia-core
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish cambia
-        run: npm publish --access public --workspace cambia
+      - name: Publish @epode/cambia-runtime
+        run: npm publish --access public --workspace @epode/cambia-runtime
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @epode/cambia-react
+        run: npm publish --access public --workspace @epode/cambia-react
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @epode/cambia (CLI)
+        run: npm publish --access public --workspace @epode/cambia
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

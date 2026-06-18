@@ -1,4 +1,4 @@
-import { readFrontMatter } from '@cambia/core';
+import { readFrontMatter } from '@epode/cambia-core';
 import { Trait } from './kernel.js';
 import { getPrior } from './priors.js';
 import { type CambiaStore, createMemoryStore } from './store.js';

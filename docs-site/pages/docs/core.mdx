@@ -1,20 +1,20 @@
 ---
-title: '@cambia/core'
+title: '@epode/cambia-core'
 ---
 
-# `@cambia/core`
+# `@epode/cambia-core`
 
 Framework-zero library to read, scaffold, and validate the `cambia:` extension. No filesystem, no
 process, no I/O — pure functions you can embed in CI or your own tooling.
 
 ```bash
-npm i @cambia/core
+npm i @epode/cambia-core
 ```
 
 ## `validate(text)`
 
 ```ts
-import { validate } from '@cambia/core'
+import { validate } from '@epode/cambia-core'
 
 const result = validate(designMdText)
 // → { hasFrontMatter, hasCambia, roleCount, errors[], warnings[], info[] }
@@ -27,7 +27,7 @@ gate CI.
 ## `scaffold(text)`
 
 ```ts
-import { scaffold } from '@cambia/core'
+import { scaffold } from '@epode/cambia-core'
 
 const { text, mapped, unmapped, usedPlaceholder, alreadyPresent } = scaffold(designMdText)
 // `text` is the new file content — non-destructive (comments/format/CRLF preserved)
@@ -38,7 +38,7 @@ Builds a `cambia:` block and splices it in. Pure: returns the new string, does n
 ## `tokensToTailwind(frontMatter)` / `renderTailwindTheme(theme, format)`
 
 ```ts
-import { readFrontMatter, tokensToTailwind, renderTailwindTheme } from '@cambia/core'
+import { readFrontMatter, tokensToTailwind, renderTailwindTheme } from '@epode/cambia-core'
 
 const { frontMatter } = readFrontMatter(designMdText)
 const theme = tokensToTailwind(frontMatter)

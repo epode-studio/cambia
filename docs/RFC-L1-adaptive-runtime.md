@@ -1,6 +1,6 @@
 # RFC: Cambia L1 — The Adaptive Runtime
 
-**Status:** Implemented in [`@cambia/runtime`](../packages/runtime) (+ [`@cambia/react`](../packages/react)) · **Layer:** L1 (the first *running* layer) · **Depends on:** DESIGN.md + the `cambia:` extension (L0)
+**Status:** Implemented in [`@epode/cambia-runtime`](../packages/runtime) (+ [`@epode/cambia-react`](../packages/react)) · **Layer:** L1 (the first *running* layer) · **Depends on:** DESIGN.md + the `cambia:` extension (L0)
 *Author: Paul Nylund (Epode)*
 
 ---
@@ -114,7 +114,7 @@ role.observe({ trait: 'default-sort', value: 'createdAt' });
 
 ```tsx
 // React binding
-import { useCambia } from '@cambia/react';
+import { useCambia } from '@epode/cambia-react';
 
 function OrdersTable({ rows }) {
   const { density, defaultSort, promotedAction, observe } = useCambia('tabular-list');

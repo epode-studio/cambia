@@ -14,9 +14,9 @@
     "title": "Packages"
   },
   "cli": "CLI",
-  "core": "@cambia/core",
-  "runtime": "@cambia/runtime",
-  "react": "@cambia/react",
+  "core": "@epode/cambia-core",
+  "runtime": "@epode/cambia-runtime",
+  "react": "@epode/cambia-react",
   "--- reference": {
     "type": "separator",
     "title": "Reference"

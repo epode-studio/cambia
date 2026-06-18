@@ -1,23 +1,23 @@
 ---
-title: '@cambia/runtime'
+title: '@epode/cambia-runtime'
 ---
 
 import { Callout } from 'nextra/components'
 
-# `@cambia/runtime`
+# `@epode/cambia-runtime`
 
 The live, on-device engine. It reads the `cambia:` block, starts each adaptive trait at its
 born-adapted prior, and personalizes per user as you feed it usage signals — never touching a
 conserved trait.
 
 ```bash
-npm i @cambia/runtime
+npm i @epode/cambia-runtime
 ```
 
 ## `createCambia(options)`
 
 ```ts
-import { createCambia } from '@cambia/runtime'
+import { createCambia } from '@epode/cambia-runtime'
 
 const cambia = createCambia({
   designMd,            // DESIGN.md text containing a cambia: block
@@ -64,7 +64,7 @@ cambia.forget('bob')     // erase another user's persisted state in a shared sto
 ## Stores
 
 ```ts
-import { createMemoryStore, createLocalStorageStore } from '@cambia/runtime'
+import { createMemoryStore, createLocalStorageStore } from '@epode/cambia-runtime'
 
 createCambia({ designMd, userId, store: createLocalStorageStore() }) // browser
 ```

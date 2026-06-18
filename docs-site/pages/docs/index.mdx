@@ -14,7 +14,7 @@ on-device engine. It adds two things on top of your design system:
    *born-adapted* to the app's archetype, then personalizes to each user **on their device**.
 
 It rides inside the DESIGN.md you already have, as one top-level `cambia:` key — so the file still
-passes `npx @google/design.md lint`, and is read more deeply by `npx cambia check`.
+passes `npx @google/design.md lint`, and is read more deeply by `npx @epode/cambia check`.
 
 ## The layer stack
 
@@ -22,13 +22,13 @@ passes `npx @google/design.md lint`, and is read more deeply by `npx cambia chec
 | --- | --- | --- | --- |
 | **L0 — visual identity** | DESIGN.md | front-matter tokens + prose | on-brand UI |
 | **L0.5 — semantic roles** | Cambia | `cambia.roles` | the right component for the job; conserved/adaptive declared |
-| **L1 — born-adapted + personalization** | `@cambia/runtime` | priors + on-device state | components tuned to the app, then to each user |
+| **L1 — born-adapted + personalization** | `@epode/cambia-runtime` | priors + on-device state | components tuned to the app, then to each user |
 
 ## Install
 
 ```bash
-npx cambia init     # add a cambia: block to your DESIGN.md
-npx cambia check    # validate it
+npx @epode/cambia init     # add a cambia: block to your DESIGN.md
+npx @epode/cambia check    # validate it
 ```
 
 Then read [Getting started](/docs/getting-started).
@@ -36,6 +36,6 @@ Then read [Getting started](/docs/getting-started).
 ## Packages
 
 - [`cambia`](/docs/cli) — the CLI (`init` · `check` · `tailwind` · `skill`)
-- [`@cambia/core`](/docs/core) — parse / scaffold / validate (framework-zero)
-- [`@cambia/runtime`](/docs/runtime) — the live, on-device engine
-- [`@cambia/react`](/docs/react) — the `useCambia()` hook
+- [`@epode/cambia-core`](/docs/core) — parse / scaffold / validate (framework-zero)
+- [`@epode/cambia-runtime`](/docs/runtime) — the live, on-device engine
+- [`@epode/cambia-react`](/docs/react) — the `useCambia()` hook

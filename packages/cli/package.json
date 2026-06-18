@@ -1,6 +1,6 @@
 {
-  "name": "cambia",
-  "version": "0.1.0",
+  "name": "@epode/cambia",
+  "version": "0.1.1",
   "description": "Cambia — a DESIGN.md extension that makes a design system role-aware and (optionally) adaptive. A living growth layer on top of DESIGN.md.",
   "type": "module",
   "bin": {
@@ -18,7 +18,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@cambia/core": "0.1.0"
+    "@epode/cambia-core": "0.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.27",

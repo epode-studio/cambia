@@ -11,18 +11,18 @@ Cambia uses [Bun](https://bun.sh) workspaces. Tool versions are pinned with
 git clone https://github.com/epode-studio/cambia.git
 cd cambia
 bun install
-bun run build      # builds @cambia/core then the cambia CLI
-bun run test       # runs the @cambia/core test suite
+bun run build      # builds @epode/cambia-core then the cambia CLI
+bun run test       # runs the @epode/cambia-core test suite
 ```
 
 ## Layout
 
-- `packages/core` — `@cambia/core`: pure, framework-zero logic (parse / scaffold / validate). No filesystem or process I/O.
-- `packages/cli` — `cambia`: the CLI wrapper. Owns argument parsing, file I/O, and exit codes; calls `@cambia/core`.
+- `packages/core` — `@epode/cambia-core`: pure, framework-zero logic (parse / scaffold / validate). No filesystem or process I/O.
+- `packages/cli` — `cambia`: the CLI wrapper. Owns argument parsing, file I/O, and exit codes; calls `@epode/cambia-core`.
 - `docs/` — specs and RFCs.
 - `website/` — landing page (not published to npm).
 
-Keep new validation/parsing logic in `@cambia/core` (with tests) and keep `packages/cli`
+Keep new validation/parsing logic in `@epode/cambia-core` (with tests) and keep `packages/cli`
 a thin shell over it.
 
 ## Workflow
@@ -42,4 +42,4 @@ git push origin v0.1.x
 ```
 
 The `release` workflow builds and runs `npm publish --access public` for each package
-(`@cambia/core` first, then `cambia`). Requires an `NPM_TOKEN` repository secret.
+(`@epode/cambia-core` first, then `cambia`). Requires an `NPM_TOKEN` repository secret.

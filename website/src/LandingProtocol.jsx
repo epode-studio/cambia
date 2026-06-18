@@ -1,5 +1,5 @@
-import { createCambia, createLocalStorageStore } from '@cambia/runtime';
-import { CambiaProvider, useCambia } from '@cambia/react';
+import { createCambia, createLocalStorageStore } from '@epode/cambia-runtime';
+import { CambiaProvider, useCambia } from '@epode/cambia-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 /* ── elegant / Renaissance: white ground, Fraunces serif, sharp blue used like
@@ -32,7 +32,7 @@ cambia:
 ---
 `;
 
-/* Each profile is a real @cambia/runtime user. Seeded ones replay a little history so
+/* Each profile is a real @epode/cambia-runtime user. Seeded ones replay a little history so
    they show a different personalized state; "You" persists in your browser. */
 const PROFILES = [
   { id: 'new', label: 'New user', seed: [] },
@@ -448,15 +448,15 @@ const TAB_CODE = {
     ['observe({ trait: "density", value: "comfortable" })', INK],
   ],
   Tailwind: [
-    ['$ npx cambia tailwind --out cambia.theme.js', INK],
+    ['$ npx @epode/cambia tailwind --out cambia.theme.js', INK],
     ['  # DESIGN.md tokens → a Tailwind theme', onPaper.faint],
-    ['$ npx cambia tailwind --check cambia.theme.js', INK],
+    ['$ npx @epode/cambia tailwind --check cambia.theme.js', INK],
     ['  # CI fails if they drift', onPaper.faint],
   ],
 };
 
 /* ── scrollytelling: a sticky 50/50 split. The sample on the right is a real
-      @cambia/runtime instance that transitions as you scroll the narrative. ── */
+      @epode/cambia-runtime instance that transitions as you scroll the narrative. ── */
 const SAMPLE_ROWS = [
   [1043, 'Aurora Labs', 2480, 'Paid'],
   [1044, 'Bjørk Studio', 960, 'Refunded'],
@@ -533,7 +533,7 @@ function StickySample({ step, index, density, sort, profileLabel }) {
   return (
     <div style={{ width: '100%', maxWidth: 470 }}>
       <div className="flex items-center justify-between" style={{ marginBottom: 10, fontFamily: MONO, fontSize: 11, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' }}>
-        <span>▦ live · @cambia/runtime</span>
+        <span>▦ live · @epode/cambia-runtime</span>
         <span style={{ color: BLUE, transition: `color .4s ${EASE}` }}>viewing as {profileLabel}</span>
       </div>
       <div style={{ border: `1px solid ${INK}`, background: WHITE, minHeight: 300 }}>
@@ -662,7 +662,7 @@ function Site({ engine, uid, profile, pid, setPid }) {
   }, []);
 
   const copy = () => {
-    navigator.clipboard?.writeText('npx cambia init').then(
+    navigator.clipboard?.writeText('npx @epode/cambia init').then(
       () => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1600);
@@ -684,9 +684,9 @@ function Site({ engine, uid, profile, pid, setPid }) {
   ];
   const packages = [
     ['cambia', 'the CLI', 'init · check · tailwind · skill'],
-    ['core', '@cambia/core', 'parse · scaffold · validate'],
-    ['runtime', '@cambia/runtime', 'the live, on-device engine'],
-    ['react', '@cambia/react', 'the useCambia() hook'],
+    ['core', '@epode/cambia-core', 'parse · scaffold · validate'],
+    ['runtime', '@epode/cambia-runtime', 'the live, on-device engine'],
+    ['react', '@epode/cambia-react', 'the useCambia() hook'],
   ];
 
   const wrap = { maxWidth: 1080, margin: '0 auto', padding: '0 28px' };
@@ -828,7 +828,7 @@ function Site({ engine, uid, profile, pid, setPid }) {
               onClick={copy}
               style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 18px', border: `1px solid ${BLUE}`, cursor: 'pointer' }}
             >
-              {copied ? 'copied ✓' : 'npx cambia init  ⧉'}
+              {copied ? 'copied ✓' : 'npx @epode/cambia init  ⧉'}
             </button>
             <a href="#try" style={{ fontFamily: MONO, fontSize: 13, color: INK, fontWeight: 600 }}>
               try it yourself ↓
@@ -896,7 +896,7 @@ function Site({ engine, uid, profile, pid, setPid }) {
             className="flex items-center justify-between"
             style={{ width: '100%', maxWidth: 520, border: `1px solid ${INK}`, background: WHITE, padding: '13px 16px', gap: 12, cursor: 'pointer', color: INK }}
           >
-            <span style={{ fontFamily: MONO, fontSize: 13.5 }}>npx cambia init</span>
+            <span style={{ fontFamily: MONO, fontSize: 13.5 }}>npx @epode/cambia init</span>
             <span style={{ fontFamily: MONO, fontSize: 12, color: copied ? BLUE : onPaper.faint }}>{copied ? 'copied ✓' : '⧉ copy'}</span>
           </button>
           <div className="flex items-center" style={{ gap: 6, marginTop: 16, flexWrap: 'wrap' }}>
@@ -987,7 +987,7 @@ function Site({ engine, uid, profile, pid, setPid }) {
               onClick={copy}
               style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 20px', border: `1px solid ${BLUE}`, cursor: 'pointer' }}
             >
-              {copied ? 'copied ✓' : 'npx cambia init  ⧉'}
+              {copied ? 'copied ✓' : 'npx @epode/cambia init  ⧉'}
             </button>
             <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md" style={{ fontFamily: MONO, fontSize: 13, color: BLUE, fontWeight: 600 }}>
               read the spec →

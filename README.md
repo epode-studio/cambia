@@ -16,11 +16,11 @@ it stays lint-clean under Google's tooling and grows toward a living, per-person
 ```
 DESIGN.md  →  on-brand           (Google — the visual layer)
 + cambia:  →  role-aware         (Cambia — the right component for the job)
-+ runtime  →  living             (@cambia/runtime — personalizes per user, on-device, now)
++ runtime  →  living             (@epode/cambia-runtime — personalizes per user, on-device, now)
 ```
 
-Cambia is **a live engine, not just a linter.** `@cambia/core` + the `cambia` CLI declare
-and validate the role layer; **`@cambia/runtime`** then makes the declared *adaptive* traits
+Cambia is **a live engine, not just a linter.** `@epode/cambia-core` + the `cambia` CLI declare
+and validate the role layer; **`@epode/cambia-runtime`** then makes the declared *adaptive* traits
 actually adapt at runtime — each user starts on a born-adapted default and the interface
 quietly personalizes to them on-device, while **conserved traits never move.**
 
@@ -32,16 +32,16 @@ You already have (or will write) a `DESIGN.md`. Then:
 
 ```bash
 npx @google/design.md lint DESIGN.md   # validate the visual layer (Google)
-npx cambia init                        # add roles + adaptive layer (Cambia)
-npx cambia check                       # validate the Cambia layer
+npx @epode/cambia init                        # add roles + adaptive layer (Cambia)
+npx @epode/cambia check                       # validate the Cambia layer
 ```
 
 Drop in a skill/rule so your agent reads both layers:
 
 ```bash
-npx cambia skill          # install Claude + Cursor agent rules into this project
-npx cambia skill claude   # just Claude  → .claude/skills/cambia/SKILL.md
-npx cambia skill cursor   # just Cursor  → .cursor/rules/cambia.mdc
+npx @epode/cambia skill          # install Claude + Cursor agent rules into this project
+npx @epode/cambia skill claude   # just Claude  → .claude/skills/cambia/SKILL.md
+npx @epode/cambia skill cursor   # just Cursor  → .cursor/rules/cambia.mdc
 ```
 
 `cambia init` is **non-destructive** — it splices a `cambia:` block into your DESIGN.md
@@ -107,17 +107,17 @@ This is a monorepo. Four packages are published to npm:
 
 | Package | What it is |
 | --- | --- |
-| [`cambia`](packages/cli) | The CLI — `npx cambia init / check / skill`. |
-| [`@cambia/core`](packages/core) | Framework-zero library to read, scaffold, and validate the `cambia:` extension. Embed it in CI or your own tooling. |
-| [`@cambia/runtime`](packages/runtime) | **The live engine.** Born-adapted defaults that personalize per user on-device; conserved traits never move. |
-| [`@cambia/react`](packages/react) | React binding — the `useCambia` hook over the runtime. |
+| [`cambia`](packages/cli) | The CLI — `npx @epode/cambia init / check / skill`. |
+| [`@epode/cambia-core`](packages/core) | Framework-zero library to read, scaffold, and validate the `cambia:` extension. Embed it in CI or your own tooling. |
+| [`@epode/cambia-runtime`](packages/runtime) | **The live engine.** Born-adapted defaults that personalize per user on-device; conserved traits never move. |
+| [`@epode/cambia-react`](packages/react) | React binding — the `useCambia` hook over the runtime. |
 
 ```
 cambia/
 ├── packages/
-│   ├── core/      # @cambia/core    — readFrontMatter, scaffold, validate (no I/O)
-│   ├── runtime/   # @cambia/runtime — the live L1 adaptive engine
-│   ├── react/     # @cambia/react   — useCambia hook
+│   ├── core/      # @epode/cambia-core    — readFrontMatter, scaffold, validate (no I/O)
+│   ├── runtime/   # @epode/cambia-runtime — the live L1 adaptive engine
+│   ├── react/     # @epode/cambia-react   — useCambia hook
 │   └── cli/       # cambia          — the command + bundled skills/templates/examples
 ├── docs/          # the L1 adaptive-runtime RFC
 ├── website/       # landing page (not published)
@@ -133,7 +133,7 @@ let the runtime adapt the adaptive ones per user. Born-adapted from the first re
 personalizing on-device, never touching a conserved trait:
 
 ```ts
-import { createCambia } from '@cambia/runtime';
+import { createCambia } from '@epode/cambia-runtime';
 
 const cambia = createCambia({
   designMd,            // your DESIGN.md text (with a cambia: block)
@@ -151,8 +151,8 @@ table.observe({ trait: 'density', value: 'comfortable' });
 In React:
 
 ```tsx
-import { createCambia } from '@cambia/runtime';
-import { CambiaProvider, useCambia } from '@cambia/react';
+import { createCambia } from '@epode/cambia-runtime';
+import { CambiaProvider, useCambia } from '@epode/cambia-react';
 
 const cambia = createCambia({ designMd, userId });
 
@@ -187,7 +187,7 @@ Nothing is transmitted: per-user state persists on-device (in-memory by default,
 ## Validating in CI
 
 ```ts
-import { validate, scaffold } from '@cambia/core';
+import { validate, scaffold } from '@epode/cambia-core';
 
 const result = validate(designMdText);
 if (result.errors.length) { /* fail CI */ }
@@ -203,8 +203,8 @@ Generate a Tailwind theme from your DESIGN.md tokens (colors, spacing, `rounded`
 typography) so the two never drift:
 
 ```bash
-npx cambia tailwind --out cambia.theme.js          # generate (esm | cjs | json)
-npx cambia tailwind --check cambia.theme.js         # CI: fail if DESIGN.md drifted from the file
+npx @epode/cambia tailwind --out cambia.theme.js          # generate (esm | cjs | json)
+npx @epode/cambia tailwind --check cambia.theme.js         # CI: fail if DESIGN.md drifted from the file
 ```
 
 ```js

@@ -1,20 +1,20 @@
 ---
-title: '@cambia/react'
+title: '@epode/cambia-react'
 ---
 
-# `@cambia/react`
+# `@epode/cambia-react`
 
 The React binding for the runtime — one provider and one hook.
 
 ```bash
-npm i @cambia/react @cambia/runtime
+npm i @epode/cambia-react @epode/cambia-runtime
 ```
 
 ## Provider
 
 ```tsx
-import { createCambia } from '@cambia/runtime'
-import { CambiaProvider } from '@cambia/react'
+import { createCambia } from '@epode/cambia-runtime'
+import { CambiaProvider } from '@epode/cambia-react'
 
 const cambia = createCambia({ designMd, userId })
 
@@ -30,7 +30,7 @@ function App() {
 ## `useCambia(roleName)`
 
 ```tsx
-import { useCambia } from '@cambia/react'
+import { useCambia } from '@epode/cambia-react'
 
 function OrdersTable() {
   const { values, observe } = useCambia('tabular-list')

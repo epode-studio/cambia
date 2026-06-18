@@ -9,8 +9,8 @@
     "docs-site"
   ],
   "scripts": {
-    "build": "bun run --filter='@cambia/core' build && bun run --filter='@cambia/runtime' build && bun run --filter='@cambia/react' build && bun run --filter='cambia' build",
-    "test": "bun run --filter='@cambia/core' test && bun run --filter='@cambia/runtime' test",
+    "build": "bun run --filter='@epode/cambia-core' build && bun run --filter='@epode/cambia-runtime' build && bun run --filter='@epode/cambia-react' build && bun run --filter='@epode/cambia' build",
+    "test": "bun run --filter='@epode/cambia-core' test && bun run --filter='@epode/cambia-runtime' test",
     "format": "biome format --write .",
     "lint": "biome check .",
     "prepare": "husky || true"

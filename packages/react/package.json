@@ -1,6 +1,6 @@
 {
-  "name": "@cambia/react",
-  "version": "0.1.0",
+  "name": "@epode/cambia-react",
+  "version": "0.1.1",
   "description": "React binding for the Cambia runtime — the useCambia hook for born-adapted, self-personalizing UI.",
   "type": "module",
   "main": "./dist/index.js",
@@ -21,7 +21,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@cambia/runtime": "0.1.0"
+    "@epode/cambia-runtime": "0.1.1"
   },
   "peerDependencies": {
     "react": ">=18"

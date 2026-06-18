@@ -1,6 +1,6 @@
 {
-  "name": "@cambia/core",
-  "version": "0.1.0",
+  "name": "@epode/cambia-core",
+  "version": "0.1.1",
   "description": "Cambia core — read, scaffold, and validate the `cambia:` extension inside a DESIGN.md. Framework-zero, no I/O.",
   "type": "module",
   "main": "./dist/index.js",

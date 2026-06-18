@@ -36,11 +36,11 @@ but are less portable.
 ## Conformance
 
 A Cambia extension is **valid** when `cambia.roles` is a map and every `component` it references
-exists in the DESIGN.md `components` block. `npx cambia check` enforces this and warns on traits
+exists in the DESIGN.md `components` block. `npx @epode/cambia check` enforces this and warns on traits
 listed as both conserved and adaptive, non-canonical role names, or an unfilled `TODO` scaffold.
 
 ## Inference
 
-`npx cambia init` guesses roles from component names — e.g. `button*`/`*-cta` → `primary-action`,
+`npx @epode/cambia init` guesses roles from component names — e.g. `button*`/`*-cta` → `primary-action`,
 `*table*`/`*list*` → `tabular-list`, `*field*`/`*input*` → `form-field`. Always review the result;
 inference is a starting point, not the source of truth.

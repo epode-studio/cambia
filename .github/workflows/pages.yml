@@ -24,9 +24,9 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      # build the @cambia/* packages first — the site imports @cambia/runtime + @cambia/react
+      # build the @cambia/* packages first — the site imports @epode/cambia-runtime + @epode/cambia-react
       - run: bun run build
-      - run: bun run --filter='@cambia/website' build
+      - run: bun run --filter='@epode/cambia-website' build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

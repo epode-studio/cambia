@@ -1,6 +1,6 @@
 {
-  "name": "@cambia/runtime",
-  "version": "0.1.0",
+  "name": "@epode/cambia-runtime",
+  "version": "0.1.1",
   "description": "Cambia runtime — the live L1 adaptive engine. Born-adapted defaults that personalize per user on-device, never touching conserved traits.",
   "type": "module",
   "main": "./dist/index.js",
@@ -22,7 +22,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@cambia/core": "0.1.0"
+    "@epode/cambia-core": "0.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.27",

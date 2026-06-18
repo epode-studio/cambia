@@ -1,5 +1,5 @@
 {
-  "name": "@cambia/website",
+  "name": "@epode/cambia-website",
   "version": "0.1.0",
   "private": true,
   "description": "Cambia landing page (not published to npm).",
@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@cambia/react": "*",
-    "@cambia/runtime": "*",
+    "@epode/cambia-react": "*",
+    "@epode/cambia-runtime": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

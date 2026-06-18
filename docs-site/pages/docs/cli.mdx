@@ -5,7 +5,7 @@ title: CLI
 # `cambia` — the CLI
 
 ```bash
-npx cambia <command>
+npx @epode/cambia <command>
 ```
 
 | Command | What it does |
@@ -20,7 +20,7 @@ Global flags: `--help` / `-h`, `--version` / `-v`.
 ## `init`
 
 ```bash
-npx cambia init [--file DESIGN.md] [--dry-run]
+npx @epode/cambia init [--file DESIGN.md] [--dry-run]
 ```
 
 Reads `components:`, infers roles, and splices in a `cambia:` block **without** reformatting the
@@ -30,7 +30,7 @@ be inferred, it writes a `TODO` placeholder (a warning in `check`, not an error)
 ## `check`
 
 ```bash
-npx cambia check [DESIGN.md]
+npx @epode/cambia check [DESIGN.md]
 ```
 
 Validates that every role's `component` exists, that `conserved`/`adaptive` are lists, and warns on:
@@ -40,15 +40,15 @@ only on real errors.
 ## `tailwind`
 
 ```bash
-npx cambia tailwind [--file DESIGN.md] [--out FILE] [--check FILE] [--format esm|cjs|json]
+npx @epode/cambia tailwind [--file DESIGN.md] [--out FILE] [--check FILE] [--format esm|cjs|json]
 ```
 
 Generates a Tailwind `theme` fragment from DESIGN.md tokens (colors, spacing, `rounded` →
 `borderRadius`, typography → `fontSize`/`fontFamily`).
 
 ```bash
-npx cambia tailwind --out cambia.theme.js     # generate
-npx cambia tailwind --check cambia.theme.js   # CI: fail if DESIGN.md drifted from the file
+npx @epode/cambia tailwind --out cambia.theme.js     # generate
+npx @epode/cambia tailwind --check cambia.theme.js   # CI: fail if DESIGN.md drifted from the file
 ```
 
 `--check` re-generates and diffs against the committed file, so a token change that wasn't
@@ -57,7 +57,7 @@ regenerated fails CI. DESIGN.md stays the single source of truth.
 ## `skill`
 
 ```bash
-npx cambia skill [claude|cursor]
+npx @epode/cambia skill [claude|cursor]
 ```
 
 Copies the bundled agent rule into your project — `.claude/skills/cambia/SKILL.md` or

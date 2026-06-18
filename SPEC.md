@@ -16,7 +16,7 @@ makes those layers live.
 | --- | --- | --- | --- |
 | **L0 — visual identity** | DESIGN.md (Google) | front-matter tokens + prose | agent builds on-brand |
 | **L0.5 — semantic roles** | Cambia | `cambia.roles` in the same file | agent builds with the right component for the job; conserved/plastic is declared |
-| **L1 — born-adapted + personalization** | `@cambia/runtime` | `cambia.context` + priors, on-device | components arrive tuned to the archetype and adapt per user, locally |
+| **L1 — born-adapted + personalization** | `@epode/cambia-runtime` | `cambia.context` + priors, on-device | components arrive tuned to the archetype and adapt per user, locally |
 | **L2 — richer inference** | Cambia runtime | on-device | cross-trait / cross-role factors over the same estimator |
 | **L3–L4 — manifestation** | Cambia runtime | a user-owned genome | per-person, cross-app interfaces |
 
@@ -32,7 +32,7 @@ silent on custom top-level keys. Cambia uses that on purpose.
 
 A file with a `cambia:` block:
 - **passes `npx @google/design.md lint`** unchanged (the key is ignored), and
-- **is read more deeply by `npx cambia check`** (which validates roles and cross-references
+- **is read more deeply by `npx @epode/cambia check`** (which validates roles and cross-references
   them against the DESIGN.md `components`).
 
 You never fork the file. One DESIGN.md, two readers.
@@ -59,7 +59,7 @@ cambia:
 ## Conformance
 
 A Cambia extension is **valid** if `cambia.roles` is a map and every `component` it
-references exists in the DESIGN.md `components` block. `npx cambia check` enforces this and
+references exists in the DESIGN.md `components` block. `npx @epode/cambia check` enforces this and
 warns on traits listed as both conserved and adaptive, non-canonical role names, or an
 unfilled scaffold (a `TODO` component / archetype left from `cambia init`).
 
@@ -80,12 +80,12 @@ to a DESIGN.md today, and it's the down payment on the entire roadmap.
 - **DESIGN.md ↔ Tailwind bridge** — implemented via `cambia tailwind`: it generates a
   Tailwind `theme` fragment from DESIGN.md tokens (colors, spacing, `rounded` → `borderRadius`,
   typography → `fontSize`/`fontFamily`), and `--check` re-generates and diffs against a
-  committed file to catch drift in CI. The generator lives in `@cambia/core`
+  committed file to catch drift in CI. The generator lives in `@epode/cambia-core`
   (`tokensToTailwind` / `renderTailwindTheme`). DESIGN.md remains the single source of truth;
   the bridge does not yet parse a hand-written `tailwind.config.js` (it diffs the generated artifact).
 - **L1 adaptive runtime** — specified in [`docs/RFC-L1-adaptive-runtime.md`](docs/RFC-L1-adaptive-runtime.md)
-  and **implemented** in [`@cambia/runtime`](packages/runtime) (with a React binding in
-  [`@cambia/react`](packages/react)): born-adapted defaults that personalize per user on-device,
+  and **implemented** in [`@epode/cambia-runtime`](packages/runtime) (with a React binding in
+  [`@epode/cambia-react`](packages/react)): born-adapted defaults that personalize per user on-device,
   never touching conserved traits. Layers L2–L4 (cross-trait factors, shared learning, a
   user-owned cross-app genome) remain future work.
 

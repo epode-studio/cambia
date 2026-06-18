@@ -29,7 +29,7 @@ cambia:
 ## Conformance
 
 A Cambia extension is **valid** if `cambia.roles` is a map and every `component` it references
-exists in the DESIGN.md `components` block. `npx cambia check` enforces this and warns on traits
+exists in the DESIGN.md `components` block. `npx @epode/cambia check` enforces this and warns on traits
 listed as both conserved and adaptive, non-canonical role names, or an unfilled scaffold. The visual
 layer is validated separately by `npx @google/design.md lint` — the two tools are complementary.
 
@@ -44,5 +44,5 @@ more deeply by `cambia check`. One file, two readers.
 
 - **Tailwind bridge** — implemented via `cambia tailwind` (generate + drift-check). Does not yet
   parse a hand-written `tailwind.config.js` (it diffs the generated artifact).
-- **L1 adaptive runtime** — implemented in [`@cambia/runtime`](/docs/runtime) + `@cambia/react`.
+- **L1 adaptive runtime** — implemented in [`@epode/cambia-runtime`](/docs/runtime) + `@epode/cambia-react`.
   Layers L2–L4 (cross-trait factors, shared learning, a user-owned cross-app genome) are future work.

@@ -15,7 +15,7 @@ Cambia is **not a competing file format.** It is an extension to Google's
 | --- | --- | --- | --- |
 | **L0 — visual identity** | DESIGN.md | front-matter tokens + prose | agent builds on-brand |
 | **L0.5 — semantic roles** | Cambia | `cambia.roles` in the same file | the right component for the job; conserved/adaptive declared |
-| **L1 — born-adapted + personalization** | `@cambia/runtime` | priors + on-device state | components tuned to the archetype, then to each user |
+| **L1 — born-adapted + personalization** | `@epode/cambia-runtime` | priors + on-device state | components tuned to the archetype, then to each user |
 | **L2+ — richer inference** | runtime (future) | on-device | cross-trait / cross-role factors |
 
 DESIGN.md owns L0. Cambia owns everything above it. You adopt DESIGN.md as-is and extend it.
@@ -29,7 +29,7 @@ keys. Cambia uses that on purpose.
 - **An optional `## Adaptation` section** in the markdown body — human rationale.
 
 A file with a `cambia:` block **passes `npx @google/design.md lint`** unchanged (the key is ignored)
-and is read more deeply by **`npx cambia check`**. One DESIGN.md, two readers.
+and is read more deeply by **`npx @epode/cambia check`**. One DESIGN.md, two readers.
 
 ## Why roles are the hinge
 

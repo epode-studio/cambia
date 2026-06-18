@@ -12,7 +12,7 @@ Cambia rides inside a `DESIGN.md`. If you don't have one yet, create it first (s
 ## 1. Add a `cambia:` block
 
 ```bash
-npx cambia init
+npx @epode/cambia init
 ```
 
 `init` reads your DESIGN.md `components:`, infers semantic roles from their names, and **splices** a
@@ -45,7 +45,7 @@ cambia:
 ## 2. Validate it
 
 ```bash
-npx cambia check
+npx @epode/cambia check
 ```
 
 `check` confirms every role's `component` exists in your DESIGN.md, flags traits listed as both
@@ -57,12 +57,12 @@ an unfilled scaffold is a warning, not a failure.
 Install the runtime and personalize the adaptive traits per user, on-device:
 
 ```bash
-npm i @cambia/runtime @cambia/react
+npm i @epode/cambia-runtime @epode/cambia-react
 ```
 
 ```tsx
-import { createCambia } from '@cambia/runtime'
-import { CambiaProvider, useCambia } from '@cambia/react'
+import { createCambia } from '@epode/cambia-runtime'
+import { CambiaProvider, useCambia } from '@epode/cambia-react'
 
 const cambia = createCambia({ designMd, userId })
 
@@ -82,6 +82,6 @@ See [the runtime](/docs/runtime) and [the React binding](/docs/react) for the fu
 ## 4. (Optional) wire your agent + Tailwind
 
 ```bash
-npx cambia skill claude     # drop an agent rule so your AI reads both layers
-npx cambia tailwind --out cambia.theme.js   # generate a Tailwind theme from DESIGN.md tokens
+npx @epode/cambia skill claude     # drop an agent rule so your AI reads both layers
+npx @epode/cambia tailwind --out cambia.theme.js   # generate a Tailwind theme from DESIGN.md tokens
 ```

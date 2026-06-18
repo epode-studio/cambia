@@ -1,6 +1,6 @@
 # Privacy
 
-Cambia's runtime (`@cambia/runtime`) personalizes interfaces **on the device**. This
+Cambia's runtime (`@epode/cambia-runtime`) personalizes interfaces **on the device**. This
 document states exactly what it stores, where, and how to erase it.
 
 ## What is stored
