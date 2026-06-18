@@ -63,14 +63,15 @@ function buildEngine(profile) {
   return { engine, userId };
 }
 
-/* ── generative grid-cell bloom: procedural flower, opacity-only regrow loop. ── */
-function buildBloom(cols, rnd) {
+/* ── generative grid-cell bloom: procedural flower, opacity-only regrow loop.
+      `fullness` (0..1) controls petal count + how grown the bloom is. ── */
+function buildBloom(cols, rnd, fullness = 1) {
   const R = cols / 2;
   const cx = R;
   const cy = R * 0.8;
-  const petals = 5 + Math.floor(rnd() * 4);
+  const petals = 4 + Math.round(fullness * 4) + Math.floor(rnd() * 2); /* sparser → fewer petals */
   const rot = rnd() * Math.PI * 2;
-  const Rf = R * 0.94;
+  const Rf = R * (0.42 + 0.56 * fullness); /* sparser → smaller bloom */
   const cells = [];
   for (let gy = 0; gy < cols; gy++) {
     for (let gx = 0; gx < cols; gx++) {
@@ -80,7 +81,7 @@ function buildBloom(cols, rnd) {
       const theta = Math.atan2(dy, dx) + rot;
       const lobe = Math.abs(Math.cos((petals * theta) / 2));
       const env = Rf * (0.08 + 0.92 * lobe ** 1.3);
-      const core = r <= R * 0.17;
+      const core = r <= R * 0.15;
       const onPetal = r <= env;
       const stemWave = Math.sin((dy + cy) * 0.45) * 0.9;
       const inStem = Math.abs(dx - stemWave) <= 0.9 && dy > R * 0.14 && dy < R * 1.12;
@@ -88,10 +89,10 @@ function buildBloom(cols, rnd) {
         const lx = dx * dir;
         return lx > 0.4 && lx < len && Math.abs(dy - ly) < (len - lx) * 0.42;
       };
-      const inLeaf = leaf(R * 0.5, 1, R * 0.42) || leaf(R * 0.78, -1, R * 0.36);
+      const inLeaf = leaf(R * 0.5, 1, R * 0.42 * fullness) || leaf(R * 0.78, -1, R * 0.36 * fullness);
       if (core || onPetal || inStem || inLeaf) {
         if (onPetal && !core) {
-          const keep = 0.4 + 0.6 * (1 - r / Math.max(1, env));
+          const keep = (0.35 + 0.55 * fullness) + (0.6 - 0.55 * fullness) * (1 - r / Math.max(1, env));
           if (rnd() > keep) continue;
         }
         const order = Math.min(1, r / R) + (rnd() - 0.5) * 0.06;
@@ -102,16 +103,17 @@ function buildBloom(cols, rnd) {
   return { cells };
 }
 
-function GridBloom({ size = 420, cols = 46, dark = false, cycle = 11, grow = 0 }) {
-  const seed = useRef(Math.random());
+function GridBloom({ size = 420, cols = 46, dark = false, cycle = 11, grow = 0, fullness = 1, variant = 0 }) {
+  const fallback = useRef(Math.random());
   const { cells } = useMemo(() => {
-    let s = ((seed.current * 9973) | 0) || 7;
+    /* seed from `variant` when given → each persona has its own consistent flower */
+    let s = (((variant || fallback.current * 9973) * 2654435761) | 0) >>> 0 || 7;
     const rnd = () => {
       s = (s * 9301 + 49297) % 233280;
       return s / 233280;
     };
-    return buildBloom(cols, rnd);
-  }, [cols]);
+    return buildBloom(cols, rnd, fullness);
+  }, [cols, fullness, variant]);
   const cell = size / cols;
   const cMain = dark ? WHITE : BLUE;
   const cAlt = dark ? 'rgba(255,255,255,0.5)' : INK;
@@ -1014,35 +1016,58 @@ function Site({ engine, uid, profile, pid, setPid }) {
         </div>
       </div>
 
-      {/* hero */}
-      <div style={{ ...wrap, paddingTop: 48, paddingBottom: 4 }}>
-        <Reveal>
-          <Eyebrow color={BLUE}>Open source · MIT · a DESIGN.md extension</Eyebrow>
-        </Reveal>
-        <Reveal delay={80}>
-          <h1 className="h-hero" style={{ marginTop: 18, maxWidth: 900 }}>
-            Interfaces that adapt to each user, on-device.
-          </h1>
-        </Reveal>
-        <Reveal delay={160}>
-          <p className="serif" style={{ fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(19px,2.2vw,27px)', color: INK, lineHeight: 1.34, margin: '22px 0 0', maxWidth: 560 }}>
-            The interface learns the person — privately, on their device.
-          </p>
-        </Reveal>
-        <Reveal delay={240}>
-          <div className="flex items-center" style={{ gap: 18, marginTop: 30, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={copy}
-              style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 18px', border: `1px solid ${BLUE}`, cursor: 'pointer' }}
-            >
-              {copied ? 'copied ✓' : 'npx @epode/cambia init  ⧉'}
-            </button>
-            <a href="#try" style={{ fontFamily: MONO, fontSize: 13, color: INK, fontWeight: 600 }}>
-              try it yourself ↓
-            </a>
+      {/* hero — the right-side bloom is the active persona; switching the bar morphs it */}
+      <div style={{ ...wrap, paddingTop: 44, paddingBottom: 4 }}>
+        <div className="hero-grid">
+          <div>
+            <Reveal>
+              <Eyebrow color={BLUE}>Open source · MIT · a DESIGN.md extension</Eyebrow>
+            </Reveal>
+            <Reveal delay={80}>
+              <h1 className="h-hero" style={{ marginTop: 18 }}>
+                Interfaces that adapt to each user, on-device.
+              </h1>
+            </Reveal>
+            <Reveal delay={160}>
+              <p className="serif" style={{ fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(19px,2.2vw,27px)', color: INK, lineHeight: 1.34, margin: '22px 0 0', maxWidth: 540 }}>
+                The interface learns the person — privately, on their device.
+              </p>
+            </Reveal>
+            <Reveal delay={240}>
+              <div className="flex items-center" style={{ gap: 18, marginTop: 30, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={copy}
+                  style={{ fontFamily: MONO, fontSize: 13.5, background: BLUE, color: WHITE, fontWeight: 600, padding: '13px 18px', border: `1px solid ${BLUE}`, cursor: 'pointer' }}
+                >
+                  {copied ? 'copied ✓' : 'npx @epode/cambia init  ⧉'}
+                </button>
+                <a href="#try" style={{ fontFamily: MONO, fontSize: 13, color: INK, fontWeight: 600 }}>
+                  try it yourself ↓
+                </a>
+              </div>
+            </Reveal>
+            <Reveal delay={300}>
+              <div style={{ marginTop: 26, fontFamily: MONO, fontSize: 12, color: onPaper.sub, transition: `color .4s ${EASE}` }}>
+                <span style={{ color: BLUE }}>▦</span> this page, rendered for{' '}
+                <span style={{ color: INK, fontWeight: 600 }}>{profile.label}</span> · {density} ·{' '}
+                {sort === 'total' ? 'by value' : 'recency'}
+                <span style={{ color: onPaper.faint }}> — switch users above ↑</span>
+              </div>
+            </Reveal>
           </div>
-        </Reveal>
+          <Reveal delay={140}>
+            <div key={pid} className="pop-in">
+              <GridBloom
+                size={460}
+                cols={46}
+                grow={comfortable ? 1 : 0}
+                fullness={{ new: 0.34, skimmer: 0.72, analyst: 0.96, you: 0.58 }[pid] ?? 0.6}
+                variant={PROFILES.findIndex((p) => p.id === pid) + 2}
+              />
+            </div>
+          </Reveal>
+        </div>
       </div>
 
       {/* scrolly — sticky 50/50: the sample adapts as you scroll the narrative */}
