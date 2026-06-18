@@ -463,19 +463,6 @@ const SAMPLE_ROWS = [
   [1045, 'Fjord Supply', 1205, 'Paid'],
   [1046, 'Kestrel Co', 540, 'Pending'],
 ];
-const sampleEngines = {};
-function sampleEngine(profileId) {
-  if (!sampleEngines[profileId]) {
-    const profile = PROFILES.find((p) => p.id === profileId) || PROFILES[0];
-    const engine = createCambia({ designMd: DEMO_DESIGN, userId: `sample-${profileId}`, switchMargin: 1.1 });
-    if (profile.seed?.length) {
-      const role = engine.role('tabular-list');
-      for (const [t, v, n] of profile.seed) for (let i = 0; i < n; i++) role.observe({ trait: t, value: v });
-    }
-    sampleEngines[profileId] = engine;
-  }
-  return sampleEngines[profileId];
-}
 
 function TableView({ density, sort }) {
   const pad = density === 'comfortable' ? '13px 16px' : '7px 16px';
@@ -522,13 +509,13 @@ function TableView({ density, sort }) {
 }
 
 const STEPS = [
-  { id: 'born', eyebrow: '01 · born-adapted', title: 'It ships already tuned to your app', body: 'Every component arrives matched to the app’s archetype — analytics opens dense and recency-sorted — before anyone has done a thing.', profile: 'new', view: 'table' },
-  { id: 'personalize', eyebrow: '02 · personalize', title: 'Then it learns each person', body: 'Forward the choices a user already makes through one observe() call. After a clear pattern the trait switches — here, comfortable and sorted by total — and persists on the device.', profile: 'analyst', view: 'table' },
-  { id: 'person', eyebrow: '03 · per person', title: 'A different interface for each', body: 'The same declared design renders differently for every user. The conserved grammar — rows are records, sort by header — never moves.', profile: 'analyst', view: 'table' },
-  { id: 'dash', eyebrow: '04 · a dashboard', title: 'It promotes what you actually watch', body: 'Same engine, a different role. The metric this person opens leads; the rest recede.', profile: 'analyst', view: 'dashboard' },
-  { id: 'nav', eyebrow: '05 · a navigation', title: 'It lifts where you actually go', body: 'The few destinations someone visits rise to the top; the rest file under ‘More’.', profile: 'analyst', view: 'nav' },
-  { id: 'feed', eyebrow: '06 · a feed', title: 'It loosens or tightens to how you scan', body: 'Comfortable cards or a dense list — the same feed, fit to the reader.', profile: 'analyst', view: 'feed' },
-  { id: 'device', eyebrow: '07 · on the device', title: 'Nothing leaves. forget() erases.', body: 'Per-user state lives in the browser — small per-trait tallies, no PII, no network. One call wipes it back to born-adapted.', profile: 'new', view: 'table' },
+  { id: 'born', eyebrow: '01 · born-adapted', title: 'It ships already tuned to your app', body: 'Every component arrives matched to the app’s archetype — analytics opens dense and recency-sorted — before anyone has done a thing. (That’s the New user above.)', view: 'table' },
+  { id: 'personalize', eyebrow: '02 · personalize', title: 'Then it learns each person', body: 'It adapts from the choices a user makes, through one observe() call. Switch who you’re viewing as in the bar above — this sample follows, live.', view: 'table' },
+  { id: 'person', eyebrow: '03 · per person', title: 'A different interface for each', body: 'The same declared design renders differently for every user. The conserved grammar — rows are records, sort by header — never moves.', view: 'table' },
+  { id: 'dash', eyebrow: '04 · a dashboard', title: 'It promotes what you actually watch', body: 'Same engine, a different role. The metric this person opens leads; the rest recede.', view: 'dashboard' },
+  { id: 'nav', eyebrow: '05 · a navigation', title: 'It lifts where you actually go', body: 'The few destinations someone visits rise to the top; the rest file under ‘More’.', view: 'nav' },
+  { id: 'feed', eyebrow: '06 · a feed', title: 'It loosens or tightens to how you scan', body: 'Comfortable cards or a dense list — the same feed, fit to the reader.', view: 'feed' },
+  { id: 'device', eyebrow: '07 · on the device', title: 'Nothing leaves. forget() erases.', body: 'Per-user state lives in the browser — small per-trait tallies, no PII, no network. One call wipes it back to born-adapted.', view: 'table' },
 ];
 
 const SAMPLE_META = {
@@ -540,18 +527,14 @@ const SAMPLE_META = {
 };
 const SAMPLE_COMP = { dashboard: ExDashboard, nav: ExNav, feed: ExFeed, form: ExForm };
 
-function StickySample({ step, index }) {
-  const values = sampleEngine(step.profile).role('tabular-list').values();
-  const density = values.density || 'compact';
-  const sort = values['default-sort'] === 'total' ? 'total' : '__recency__';
+function StickySample({ step, index, density, sort, profileLabel }) {
   const comf = density === 'comfortable';
-  const prof = PROFILES.find((p) => p.id === step.profile);
   const Comp = SAMPLE_COMP[step.view];
   return (
     <div style={{ width: '100%', maxWidth: 470 }}>
       <div className="flex items-center justify-between" style={{ marginBottom: 10, fontFamily: MONO, fontSize: 11, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' }}>
         <span>▦ live · @cambia/runtime</span>
-        <span style={{ color: BLUE, transition: `color .4s ${EASE}` }}>{prof?.label}</span>
+        <span style={{ color: BLUE, transition: `color .4s ${EASE}` }}>viewing as {profileLabel}</span>
       </div>
       <div style={{ border: `1px solid ${INK}`, background: WHITE, minHeight: 300 }}>
         <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '10px 16px' }}>
@@ -561,8 +544,8 @@ function StickySample({ step, index }) {
             {step.view === 'table' ? ` · ${sort === 'total' ? 'by total' : 'recency'}` : ''}
           </span>
         </div>
-        {/* keyed wrapper → fades + lifts on each view/profile change */}
-        <div key={index} className="sample-fade" style={{ overflowX: 'auto' }}>
+        {/* keyed wrapper → fades + lifts on each view OR persona change */}
+        <div key={`${index}-${density}-${sort}`} className="sample-fade" style={{ overflowX: 'auto' }}>
           {Comp ? (
             <div style={{ padding: 16 }}>
               <Comp g={comf} />
@@ -579,9 +562,14 @@ function StickySample({ step, index }) {
   );
 }
 
-function Scrolly() {
+function Scrolly({ profileLabel }) {
   const [active, setActive] = useState(0);
   const ref = useRef(null);
+  /* the scrolly sample is bound to the ACTIVE persona engine — switching the
+     toolbar above changes every step's sample, live. */
+  const { values } = useCambia('tabular-list');
+  const density = values.density || 'compact';
+  const sort = values['default-sort'] === 'total' ? 'total' : '__recency__';
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
@@ -609,7 +597,7 @@ function Scrolly() {
         ))}
       </div>
       <div className="scrolly-sticky">
-        <StickySample step={STEPS[active]} index={active} />
+        <StickySample step={STEPS[active]} index={active} density={density} sort={sort} profileLabel={profileLabel} />
       </div>
     </div>
   );
@@ -851,7 +839,7 @@ function Site({ engine, uid, profile, pid, setPid }) {
 
       {/* scrolly — sticky 50/50: the sample adapts as you scroll the narrative */}
       <div style={{ ...wrap, paddingTop: 24 }}>
-        <Scrolly />
+        <Scrolly profileLabel={profile.label} />
       </div>
 
       {/* now you try — the whole page IS the demo; this is the preview output */}
