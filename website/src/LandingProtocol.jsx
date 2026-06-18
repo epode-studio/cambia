@@ -154,11 +154,44 @@ function GridBloom({ size = 420, cols = 46, dark = false, cycle = 11, grow = 0 }
   );
 }
 
-/* ── the LIVE demo: a real table driven by @cambia/runtime, scoped to this visitor ── */
-function LiveDemo({ profile, pid, setPid, onForget }) {
-  const { values, observe } = useCambia('tabular-list');
-  const density = values.density || 'compact';
-  const sort = values['default-sort'] === 'total' ? 'total' : '__recency__';
+/* ── a segmented control: the one obvious "interactive" affordance on the page ── */
+function Segmented({ options, value, onChange, big }) {
+  return (
+    <div className="flex" style={{ border: `1px solid ${INK}`, background: WHITE, flexShrink: 0 }}>
+      {options.map((o, i) => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            style={{
+              fontFamily: MONO,
+              fontSize: big ? 12 : 11,
+              padding: big ? '7px 13px' : '5px 10px',
+              cursor: 'pointer',
+              border: 'none',
+              borderLeft: i ? `1px solid ${INK}` : 'none',
+              background: active ? BLUE : 'transparent',
+              color: active ? WHITE : INK,
+              textTransform: 'uppercase',
+              letterSpacing: '.04em',
+              transition: `background .15s ${EASE}`,
+            }}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const STATUS_DOT = { Paid: INK, Pending: BLUE, Refunded: 'rgba(11,11,13,0.35)' };
+
+/* ── preview window: clearly PASSIVE output. Window chrome + status dots, no
+      controls — it just renders the active profile. ── */
+function PreviewTable({ density, sort, profile }) {
   const comfortable = density === 'comfortable';
   const rows = [
     [1043, 'Aurora Labs', 2480, 'Paid'],
@@ -167,105 +200,57 @@ function LiveDemo({ profile, pid, setPid, onForget }) {
     [1046, 'Kestrel Co', 540, 'Pending'],
   ];
   const sorted = [...rows].sort((a, b) => (sort === 'total' ? b[2] - a[2] : b[0] - a[0]));
-  const cellPad = comfortable ? '13px 14px' : '6px 14px';
+  const pad = comfortable ? '13px 16px' : '7px 16px';
   const money = (n) => `$${n.toLocaleString('en-US')}`;
-  const chip = (active, muted) => ({
-    fontFamily: MONO,
-    fontSize: 11.5,
-    padding: '6px 10px',
-    cursor: 'pointer',
-    border: `1px solid ${muted ? onPaper.line : active ? BLUE : INK}`,
-    background: active ? BLUE : WHITE,
-    color: active ? WHITE : muted ? onPaper.sub : INK,
-    textTransform: 'uppercase',
-    letterSpacing: '.03em',
-    transition: `all .2s ${EASE}`,
-  });
-  const lbl = { fontFamily: MONO, fontSize: 10, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' };
   const cols = [
     ['Order', 'order'],
     ['Customer', ''],
     ['Total', 'total'],
     ['Status', ''],
   ];
-
   return (
     <div style={{ border: `1px solid ${INK}`, background: WHITE }}>
-      {/* profile switcher */}
-      <div className="flex items-center" style={{ borderBottom: `1px solid ${INK}`, padding: '10px 12px', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ ...lbl, marginRight: 2 }}>profile</span>
-        {PROFILES.map((p) => (
-          <button key={p.id} type="button" style={chip(pid === p.id)} onClick={() => setPid(p.id)}>
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '10px 16px', flexWrap: 'wrap', gap: 8 }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em' }}>data-table · role: tabular-list</span>
-        <span style={{ fontFamily: MONO, fontSize: 11, color: BLUE }}>
-          {density} · {sort === 'total' ? 'by total' : 'recency'}
-        </span>
-      </div>
-
-      <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-        <thead>
-          <tr style={{ borderBottom: `1px solid ${INK}` }}>
-            {cols.map(([h, key]) => {
-              const active = (key === 'total' && sort === 'total') || (key === 'order' && sort !== 'total');
-              return (
-                <th key={h} style={{ textAlign: 'left', padding: '8px 14px', fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.06em', color: active ? BLUE : onPaper.faint, fontWeight: 600 }}>
-                  {h}
-                  {active ? ' ↓' : ''}
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((r, i) => (
-            <tr key={r[0]} style={{ borderBottom: i < sorted.length - 1 ? `1px solid ${onPaper.line}` : 'none' }}>
-              <td style={{ padding: cellPad, fontFamily: MONO, color: onPaper.sub, transition: `padding .5s ${EASE}` }}>#{r[0]}</td>
-              <td style={{ padding: cellPad, fontWeight: 600, transition: `padding .5s ${EASE}` }}>{r[1]}</td>
-              <td style={{ padding: cellPad, fontVariantNumeric: 'tabular-nums', color: sort === 'total' ? BLUE : INK, transition: `padding .5s ${EASE}` }}>{money(r[2])}</td>
-              <td style={{ padding: cellPad, transition: `padding .5s ${EASE}` }}>
-                <span style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em', border: `1px solid ${INK}`, padding: '2px 6px' }}>{r[3]}</span>
-              </td>
-            </tr>
+      {/* window chrome — signals "this is a preview, not buttons" */}
+      <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '9px 14px', background: '#F6F6F8' }}>
+        <span className="flex items-center" style={{ gap: 6 }}>
+          {[0, 1, 2].map((d) => (
+            <span key={d} style={{ width: 8, height: 8, borderRadius: 99, border: `1px solid ${onPaper.faint}` }} />
           ))}
-        </tbody>
-      </table>
+          <span style={{ fontFamily: MONO, fontSize: 10.5, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em', marginLeft: 6 }}>preview · {profile.label}</span>
+        </span>
+        <span style={{ fontFamily: MONO, fontSize: 10.5, color: BLUE }}>data-table · {density}</span>
       </div>
-
-      <div className="flex items-center" style={{ gap: 14, padding: '12px 14px', borderTop: `1px solid ${INK}`, flexWrap: 'wrap' }}>
-        <div className="flex items-center" style={{ gap: 5 }}>
-          <span style={{ ...lbl, marginRight: 2 }}>density</span>
-          <button type="button" style={chip(!comfortable)} onClick={() => observe({ trait: 'density', value: 'compact' })}>
-            compact
-          </button>
-          <button type="button" style={chip(comfortable)} onClick={() => observe({ trait: 'density', value: 'comfortable' })}>
-            comfortable
-          </button>
-        </div>
-        <div className="flex items-center" style={{ gap: 5 }}>
-          <span style={{ ...lbl, marginRight: 2 }}>sort</span>
-          <button type="button" style={chip(sort !== 'total')} onClick={() => observe({ trait: 'default-sort', value: '__recency__' })}>
-            recency
-          </button>
-          <button type="button" style={chip(sort === 'total')} onClick={() => observe({ trait: 'default-sort', value: 'total' })}>
-            total
-          </button>
-        </div>
-        <button type="button" style={{ ...chip(false, true), marginLeft: 'auto' }} onClick={onForget}>
-          forget
-        </button>
-      </div>
-
-      <div style={{ borderTop: `1px solid ${onPaper.line}`, padding: '10px 14px', fontFamily: MONO, fontSize: 11, color: onPaper.faint, lineHeight: 1.7 }}>
-        profile <span style={{ color: INK }}>{profile.label}</span> · density <span style={{ color: BLUE }}>{density}</span> · sort{' '}
-        <span style={{ color: BLUE }}>{sort === 'total' ? 'total' : 'recency'}</span> ·{' '}
-        {profile.persistent ? 'saved in your browser' : 'in-memory'} · the whole page renders as this profile ↑
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${onPaper.line}` }}>
+              {cols.map(([h, key]) => {
+                const active = (key === 'total' && sort === 'total') || (key === 'order' && sort !== 'total');
+                return (
+                  <th key={h} style={{ textAlign: 'left', padding: '9px 16px', fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.06em', color: active ? BLUE : onPaper.faint, fontWeight: 600 }}>
+                    {h}
+                    {active ? ' ↓' : ''}
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((r, i) => (
+              <tr key={r[0]} style={{ borderBottom: i < sorted.length - 1 ? `1px solid ${onPaper.line}` : 'none' }}>
+                <td style={{ padding: pad, fontFamily: MONO, color: onPaper.sub, transition: `padding .5s ${EASE}` }}>#{r[0]}</td>
+                <td style={{ padding: pad, fontWeight: 600, transition: `padding .5s ${EASE}` }}>{r[1]}</td>
+                <td style={{ padding: pad, fontVariantNumeric: 'tabular-nums', color: sort === 'total' ? BLUE : INK, transition: `padding .5s ${EASE}` }}>{money(r[2])}</td>
+                <td style={{ padding: pad, transition: `padding .5s ${EASE}` }}>
+                  <span className="flex items-center" style={{ gap: 6, fontSize: 12, color: onPaper.sub }}>
+                    <span style={{ width: 6, height: 6, borderRadius: 99, background: STATUS_DOT[r[3]] }} />
+                    {r[3]}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -525,7 +510,10 @@ function TableView({ density, sort }) {
             <td style={{ padding: pad, fontWeight: 600, transition: `padding .5s ${EASE}` }}>{r[1]}</td>
             <td style={{ padding: pad, fontVariantNumeric: 'tabular-nums', color: sort === 'total' ? BLUE : INK, transition: `padding .5s ${EASE}` }}>{money(r[2])}</td>
             <td style={{ padding: pad, transition: `padding .5s ${EASE}` }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em', border: `1px solid ${INK}`, padding: '2px 7px' }}>{r[3]}</span>
+              <span className="flex items-center" style={{ gap: 6, fontSize: 12.5, color: onPaper.sub }}>
+                <span style={{ width: 6, height: 6, borderRadius: 99, background: STATUS_DOT[r[3]] }} />
+                {r[3]}
+              </span>
             </td>
           </tr>
         ))}
@@ -553,7 +541,7 @@ const SAMPLE_META = {
 };
 const SAMPLE_COMP = { dashboard: ExDashboard, nav: ExNav, feed: ExFeed, form: ExForm };
 
-function StickySample({ step }) {
+function StickySample({ step, index }) {
   const values = sampleEngine(step.profile).role('tabular-list').values();
   const density = values.density || 'compact';
   const sort = values['default-sort'] === 'total' ? 'total' : '__recency__';
@@ -564,7 +552,7 @@ function StickySample({ step }) {
     <div style={{ width: '100%', maxWidth: 470 }}>
       <div className="flex items-center justify-between" style={{ marginBottom: 10, fontFamily: MONO, fontSize: 11, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' }}>
         <span>▦ live · @cambia/runtime</span>
-        <span style={{ color: BLUE }}>{prof?.label}</span>
+        <span style={{ color: BLUE, transition: `color .4s ${EASE}` }}>{prof?.label}</span>
       </div>
       <div style={{ border: `1px solid ${INK}`, background: WHITE, minHeight: 300 }}>
         <div className="flex items-center justify-between" style={{ borderBottom: `1px solid ${INK}`, padding: '10px 16px' }}>
@@ -574,7 +562,8 @@ function StickySample({ step }) {
             {step.view === 'table' ? ` · ${sort === 'total' ? 'by total' : 'recency'}` : ''}
           </span>
         </div>
-        <div style={{ overflowX: 'auto' }}>
+        {/* keyed wrapper → fades + lifts on each view/profile change */}
+        <div key={index} className="sample-fade" style={{ overflowX: 'auto' }}>
           {Comp ? (
             <div style={{ padding: 16 }}>
               <Comp g={comf} />
@@ -621,7 +610,7 @@ function Scrolly() {
         ))}
       </div>
       <div className="scrolly-sticky">
-        <StickySample step={STEPS[active]} />
+        <StickySample step={STEPS[active]} index={active} />
       </div>
     </div>
   );
@@ -631,8 +620,9 @@ function Site({ engine, uid, profile, pid, setPid }) {
   const [tab, setTab] = useState('DESIGN.md');
   const [copied, setCopied] = useState(false);
   /* the WHOLE page reads the live trait — spacing, examples, bloom all follow the active profile */
-  const { values } = useCambia('tabular-list');
+  const { values, observe } = useCambia('tabular-list');
   const density = values.density || 'compact';
+  const sort = values['default-sort'] === 'total' ? 'total' : '__recency__';
   const comfortable = density === 'comfortable';
   const D = comfortable ? 1.26 : 1;
   const sx = (top, bottom) => ({
@@ -694,13 +684,20 @@ function Site({ engine, uid, profile, pid, setPid }) {
         .justify-between{ justify-content:space-between; }
         @keyframes bloomPulse{ 0%,100%{ opacity:.16 } 50%{ opacity:1 } }
         .bloom-cell{ animation-name:bloomPulse; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
+        @keyframes sampleFade{ from{ opacity:0; transform:translateY(8px) } to{ opacity:1; transform:translateY(0) } }
+        .sample-fade{ animation:sampleFade .5s ${EASE} both; }
+        .persona-bar{ position:sticky; top:0; z-index:50; background:${BLUE_SOFT}; border-top:1px solid ${INK}; border-bottom:1px solid ${INK}; }
+        .persona-row{ overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+        .persona-row::-webkit-scrollbar{ display:none; }
+        .persona-traits{ display:none; }
+        @media (min-width:760px){ .persona-traits{ display:flex; } .persona-row{ overflow-x:visible; } }
         @media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } .bloom-cell{ opacity:1!important; } }
         .h-hero{ font-family:${SERIF}; font-weight:600; font-size:clamp(44px,6.4vw,90px); line-height:0.99; letter-spacing:-.02em; margin:0; text-wrap:balance; }
         .sec-h{ font-family:${SERIF}; font-weight:600; font-size:clamp(30px,4.4vw,54px); line-height:1.0; letter-spacing:-.015em; margin:0; text-wrap:balance; }
         .feat-h{ font-family:${SERIF}; font-weight:600; font-size:clamp(22px,2.6vw,31px); line-height:1.06; letter-spacing:-.01em; margin:0; text-wrap:balance; }
         .hero-grid{ display:grid; grid-template-columns:1fr; gap:36px; align-items:center; }
         .scrolly{ display:flex; flex-direction:column; }
-        .scrolly-sticky{ order:-1; position:sticky; top:0; z-index:2; background:${WHITE}; padding:14px 0 14px; border-bottom:1px solid ${onPaper.line}; }
+        .scrolly-sticky{ order:-1; position:sticky; top:46px; z-index:2; background:${WHITE}; padding:14px 0 14px; border-bottom:1px solid ${onPaper.line}; }
         .scrolly-step{ min-height:46vh; display:flex; align-items:center; padding:22px 0; border-top:1px solid ${onPaper.line}; }
         .triptych{ display:grid; grid-template-columns:1fr; gap:34px; }
         .figs{ display:grid; grid-template-columns:1fr; gap:16px; }
@@ -709,8 +706,9 @@ function Site({ engine, uid, profile, pid, setPid }) {
         @media (min-width:900px){
           .hero-grid{ grid-template-columns:1.08fr 0.92fr; gap:44px; }
           .scrolly{ display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start; }
-          .scrolly-sticky{ order:0; position:sticky; top:0; height:100vh; display:flex; align-items:center; background:transparent; padding:0; border-bottom:none; z-index:auto; }
-          .scrolly-step{ min-height:90vh; border-top:none; padding:0; }
+          .scrolly-sticky{ order:0; position:sticky; top:48px; height:calc(100vh - 48px); display:flex; align-items:center; background:transparent; padding:0; border-bottom:none; z-index:auto; }
+          .scrolly-step{ min-height:78vh; border-top:none; padding:0; }
+          .scrolly-step:first-child{ min-height:62vh; align-items:flex-start; padding-top:8px; }
           .triptych{ grid-template-columns:1fr 1fr 1fr; gap:28px; }
           .figs{ grid-template-columns:1fr 1fr; }
           .pkgs{ grid-template-columns:1fr 1fr; }
@@ -720,27 +718,45 @@ function Site({ engine, uid, profile, pid, setPid }) {
 
       {/* nav */}
       <div style={wrap}>
-        <div className="flex items-center justify-between" style={{ padding: '20px 0 16px', fontSize: 13, borderBottom: `1px solid ${INK}`, flexWrap: 'wrap', gap: 10 }}>
+        <div className="flex items-center justify-between" style={{ padding: '18px 0 14px', fontSize: 13, flexWrap: 'wrap', gap: 10 }}>
           <div className="flex items-center" style={{ gap: 9 }}>
             <span style={{ width: 9, height: 9, background: BLUE, display: 'inline-block' }} />
             <span style={{ fontFamily: MONO, fontWeight: 700, letterSpacing: '.04em' }}>cambia</span>
           </div>
           <div className="flex items-center" style={{ gap: 16, fontFamily: MONO, fontSize: 12, color: onPaper.sub }}>
-            <span
-              style={{
-                fontSize: 11,
-                color: comfortable ? BLUE : onPaper.faint,
-                border: `1px solid ${comfortable ? BLUE : onPaper.line}`,
-                padding: '3px 8px',
-                letterSpacing: '.04em',
-                transition: `all .4s ${EASE}`,
-              }}
-            >
-              ▦ {profile?.persistent ? 'adapting to you' : `as ${profile?.label?.toLowerCase()}`} · {density}
-            </span>
             <a href="https://github.com/epode-studio/cambia/blob/main/SPEC.md">spec</a>
             <a href="https://github.com/epode-studio/cambia/tree/main/docs-site">docs</a>
             <a href="https://github.com/epode-studio/cambia">github</a>
+          </div>
+        </div>
+      </div>
+
+      {/* universal sticky persona bar — switches the whole site's active user */}
+      <div className="persona-bar">
+        <div style={wrap}>
+          <div className="persona-row flex items-center" style={{ padding: '10px 0', gap: 14, flexWrap: 'nowrap' }}>
+            <span className="flex items-center" style={{ gap: 8, flexShrink: 0 }}>
+              <span style={{ fontFamily: MONO, fontSize: 10.5, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.1em', whiteSpace: 'nowrap' }}>Viewing as</span>
+              <Segmented options={PROFILES.map((p) => ({ value: p.id, label: p.label }))} value={pid} onChange={setPid} />
+            </span>
+            <span className="persona-traits flex items-center" style={{ gap: 14, marginLeft: 'auto', flexWrap: 'wrap' }}>
+              <span className="flex items-center" style={{ gap: 7 }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' }}>density</span>
+                <Segmented
+                  options={[{ value: 'compact', label: 'Compact' }, { value: 'comfortable', label: 'Comfortable' }]}
+                  value={density}
+                  onChange={(v) => observe({ trait: 'density', value: v })}
+                />
+              </span>
+              <span className="flex items-center" style={{ gap: 7 }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.06em' }}>sort</span>
+                <Segmented
+                  options={[{ value: '__recency__', label: 'Recency' }, { value: 'total', label: 'Total' }]}
+                  value={sort === 'total' ? 'total' : '__recency__'}
+                  onChange={(v) => observe({ trait: 'default-sort', value: v })}
+                />
+              </span>
+            </span>
           </div>
         </div>
       </div>
@@ -781,30 +797,39 @@ function Site({ engine, uid, profile, pid, setPid }) {
         <Scrolly />
       </div>
 
-      {/* LIVE — this page runs on cambia */}
-      <div id="try" style={{ ...wrap, ...sx(70, 0) }}>
-        <div className="demo-grid">
-          <Reveal>
-            <Eyebrow color={BLUE}>§ now you try</Eyebrow>
-            <h2 className="sec-h" style={{ marginTop: 14 }}>
-              Drive it yourself
-            </h2>
-            <p style={{ fontSize: 15, color: onPaper.sub, margin: '16px 0 0', maxWidth: 460, lineHeight: 1.55 }}>
-              The table is a real <span style={{ fontFamily: MONO, color: INK }}>@cambia/runtime</span> instance. Switch{' '}
-              <strong>profiles</strong> — each is its own user: the <strong>New user</strong> is born-adapted (compact,
-              recency), the <strong>Analyst</strong> sorts by total, the <strong>Skimmer</strong> wants room. Same
-              declared design; the conserved grammar — rows are records, sort by header — never moves.
+      {/* now you try — the whole page IS the demo; this is the preview output */}
+      <div id="try" style={{ ...wrap, ...sx(64, 0) }}>
+        <Reveal>
+          <div className="flex items-center justify-between" style={{ marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <Eyebrow color={BLUE}>§ the whole site runs on cambia</Eyebrow>
+              <h2 className="sec-h" style={{ marginTop: 12, maxWidth: 620 }}>
+                You’re already in the demo
+              </h2>
+            </div>
+            <p style={{ fontSize: 13.5, color: onPaper.sub, maxWidth: 360, lineHeight: 1.55, alignSelf: 'flex-end' }}>
+              The bar up top sets who’s using this site — its spacing, this preview, everything follows. Try{' '}
+              <span style={{ fontFamily: MONO, color: INK }}>You</span>: your choices save in this browser and persist on reload.
             </p>
-            <p style={{ fontSize: 13, color: onPaper.faint, marginTop: 14, lineHeight: 1.5 }}>
-              Personalize any profile with the controls — the <strong>whole page</strong> re-renders as that person
-              (spacing, the bloom, the chip). <span style={{ fontFamily: MONO, color: INK }}>You</span> is saved in your
-              browser; reload and it remembers.
-            </p>
-          </Reveal>
-          <Reveal delay={120}>
-            <LiveDemo profile={profile} pid={pid} setPid={setPid} onForget={() => engine.forget()} />
-          </Reveal>
-        </div>
+          </div>
+        </Reveal>
+        <Reveal delay={100}>
+          <div style={{ maxWidth: 640 }}>
+            <PreviewTable density={density} sort={sort} profile={profile} />
+            <div className="flex items-center justify-between" style={{ marginTop: 12, flexWrap: 'wrap', gap: 10 }}>
+              <span style={{ fontFamily: MONO, fontSize: 11.5, color: onPaper.faint, lineHeight: 1.6 }}>
+                {profile.persistent ? 'saved in your browser' : 'in-memory'} · conserved grammar fixed · adapts only what you declared
+              </span>
+              <button
+                type="button"
+                onClick={() => engine.forget()}
+                style={{ fontFamily: MONO, fontSize: 11.5, padding: '7px 13px', cursor: 'pointer', border: `1px solid ${onPaper.line}`, background: WHITE, color: onPaper.sub, textTransform: 'uppercase', letterSpacing: '.04em' }}
+              >
+                ↺ forget {profile.label}
+              </button>
+            </div>
+          </div>
+        </Reveal>
       </div>
 
       {/* add one block — the install / code */}
