@@ -37,8 +37,7 @@ cambia:
 const PROFILES = [
   { id: 'new', label: 'New user', seed: [] },
   { id: 'skimmer', label: 'Skimmer', seed: [['density', 'comfortable', 4]] },
-  { id: 'analyst', label: 'Analyst', seed: [['default-sort', 'total', 4]] },
-  { id: 'personalized', label: 'Personalized', seed: [['density', 'comfortable', 4], ['default-sort', 'total', 4]] },
+  { id: 'analyst', label: 'Analyst', seed: [['density', 'comfortable', 4], ['default-sort', 'total', 4]] },
   { id: 'you', label: 'You', persistent: true, seed: [] },
 ];
 
@@ -524,11 +523,11 @@ function TableView({ density, sort }) {
 
 const STEPS = [
   { id: 'born', eyebrow: '01 · born-adapted', title: 'It ships already tuned to your app', body: 'Every component arrives matched to the app’s archetype — analytics opens dense and recency-sorted — before anyone has done a thing.', profile: 'new', view: 'table' },
-  { id: 'personalize', eyebrow: '02 · personalize', title: 'Then it learns each person', body: 'Forward the choices a user already makes through one observe() call. After a clear pattern the trait switches — here, comfortable and sorted by total — and persists on the device.', profile: 'personalized', view: 'table' },
+  { id: 'personalize', eyebrow: '02 · personalize', title: 'Then it learns each person', body: 'Forward the choices a user already makes through one observe() call. After a clear pattern the trait switches — here, comfortable and sorted by total — and persists on the device.', profile: 'analyst', view: 'table' },
   { id: 'person', eyebrow: '03 · per person', title: 'A different interface for each', body: 'The same declared design renders differently for every user. The conserved grammar — rows are records, sort by header — never moves.', profile: 'analyst', view: 'table' },
-  { id: 'dash', eyebrow: '04 · a dashboard', title: 'It promotes what you actually watch', body: 'Same engine, a different role. The metric this person opens leads; the rest recede.', profile: 'personalized', view: 'dashboard' },
-  { id: 'nav', eyebrow: '05 · a navigation', title: 'It lifts where you actually go', body: 'The few destinations someone visits rise to the top; the rest file under ‘More’.', profile: 'personalized', view: 'nav' },
-  { id: 'feed', eyebrow: '06 · a feed', title: 'It loosens or tightens to how you scan', body: 'Comfortable cards or a dense list — the same feed, fit to the reader.', profile: 'personalized', view: 'feed' },
+  { id: 'dash', eyebrow: '04 · a dashboard', title: 'It promotes what you actually watch', body: 'Same engine, a different role. The metric this person opens leads; the rest recede.', profile: 'analyst', view: 'dashboard' },
+  { id: 'nav', eyebrow: '05 · a navigation', title: 'It lifts where you actually go', body: 'The few destinations someone visits rise to the top; the rest file under ‘More’.', profile: 'analyst', view: 'nav' },
+  { id: 'feed', eyebrow: '06 · a feed', title: 'It loosens or tightens to how you scan', body: 'Comfortable cards or a dense list — the same feed, fit to the reader.', profile: 'analyst', view: 'feed' },
   { id: 'device', eyebrow: '07 · on the device', title: 'Nothing leaves. forget() erases.', body: 'Per-user state lives in the browser — small per-trait tallies, no PII, no network. One call wipes it back to born-adapted.', profile: 'new', view: 'table' },
 ];
 
@@ -619,6 +618,38 @@ function Scrolly() {
 function Site({ engine, uid, profile, pid, setPid }) {
   const [tab, setTab] = useState('DESIGN.md');
   const [copied, setCopied] = useState(false);
+  /* one-time discovery hint on the persona bar */
+  const [hint, setHint] = useState(false);
+  const dismissHint = () => {
+    if (!hint) return;
+    setHint(false);
+    try {
+      localStorage.setItem('cambia-hint-seen', '1');
+    } catch {}
+  };
+  useEffect(() => {
+    let seen = false;
+    try {
+      seen = localStorage.getItem('cambia-hint-seen') === '1';
+    } catch {}
+    if (seen) return;
+    const show = setTimeout(() => setHint(true), 1100);
+    const hide = setTimeout(() => {
+      setHint(false);
+      try {
+        localStorage.setItem('cambia-hint-seen', '1');
+      } catch {}
+    }, 8500);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, []);
+  /* dismiss the hint the first time the persona changes */
+  // biome-ignore lint: intentional one-shot
+  useEffect(() => {
+    if (pid !== 'new') dismissHint();
+  }, [pid]);
   /* the WHOLE page reads the live trait — spacing, examples, bloom all follow the active profile */
   const { values, observe } = useCambia('tabular-list');
   const density = values.density || 'compact';
@@ -687,6 +718,10 @@ function Site({ engine, uid, profile, pid, setPid }) {
         @keyframes sampleFade{ from{ opacity:0; transform:translateY(8px) } to{ opacity:1; transform:translateY(0) } }
         .sample-fade{ animation:sampleFade .5s ${EASE} both; }
         .persona-bar{ position:sticky; top:0; z-index:50; background:${BLUE_SOFT}; border-top:1px solid ${INK}; border-bottom:1px solid ${INK}; }
+        @keyframes hintGlow{ 0%,100%{ box-shadow:0 0 0 0 rgba(26,54,255,0) } 50%{ box-shadow:0 0 0 3px rgba(26,54,255,0.28) } }
+        .persona-hint-glow{ animation:hintGlow 1.6s ${EASE} 3; }
+        @keyframes hintFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
+        .persona-hint{ animation:hintFloat 1.8s ${EASE} infinite; }
         .persona-row{ overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
         .persona-row::-webkit-scrollbar{ display:none; }
         .persona-traits{ display:none; }
@@ -737,7 +772,29 @@ function Site({ engine, uid, profile, pid, setPid }) {
           <div className="persona-row flex items-center" style={{ padding: '10px 0', gap: 14, flexWrap: 'nowrap' }}>
             <span className="flex items-center" style={{ gap: 8, flexShrink: 0 }}>
               <span style={{ fontFamily: MONO, fontSize: 10.5, color: onPaper.faint, textTransform: 'uppercase', letterSpacing: '.1em', whiteSpace: 'nowrap' }}>Viewing as</span>
-              <Segmented options={PROFILES.map((p) => ({ value: p.id, label: p.label }))} value={pid} onChange={setPid} />
+              <span className={hint ? 'persona-hint-glow' : ''} style={{ position: 'relative', display: 'inline-flex' }}>
+                <Segmented options={PROFILES.map((p) => ({ value: p.id, label: p.label }))} value={pid} onChange={setPid} />
+                {hint ? (
+                  <span
+                    className="persona-hint"
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      left: 0,
+                      whiteSpace: 'nowrap',
+                      fontFamily: MONO,
+                      fontSize: 11,
+                      color: WHITE,
+                      background: BLUE,
+                      padding: '5px 9px',
+                      letterSpacing: '.02em',
+                      zIndex: 60,
+                    }}
+                  >
+                    ↑ switch users — the whole site adapts
+                  </span>
+                ) : null}
+              </span>
             </span>
             <span className="persona-traits flex items-center" style={{ gap: 14, marginLeft: 'auto', flexWrap: 'wrap' }}>
               <span className="flex items-center" style={{ gap: 7 }}>
