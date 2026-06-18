@@ -1,13 +1,14 @@
-# @epode/cambia-react
+# React hook to personalize your UI for each user
 
-React binding for [`@epode/cambia-runtime`](https://www.npmjs.com/package/@epode/cambia-runtime) —
-one provider and the `useCambia` hook for born-adapted, self-personalizing UI.
+**`@epode/cambia-react`** lets your React app **adapt its interface to each user** with a single
+hook. Each person gets a UI tuned to how they actually use your app — and it all happens on
+their device, with no tracking.
 
 ```bash
 npm i @epode/cambia-react @epode/cambia-runtime
 ```
 
-## Usage
+## Quick start
 
 ```tsx
 import { createCambia } from '@epode/cambia-runtime'
@@ -27,15 +28,16 @@ function OrdersTable() {
   const { values, observe } = useCambia('tabular-list')
   return (
     <DataTable
-      density={values.density}                              // adapted value
-      onDensityChange={(d) => observe({ trait: 'density', value: d })}
-      // conserved traits (rows-are-records, sort-by-header, …) are fixed in the component
+      density={values.density}                              // tailored to this user
+      onDensityChange={(d) => observe({ trait: 'density', value: d })}  // learn from their choice
     />
   )
 }
 ```
 
-`values` holds the born-adapted-then-personalized trait values; conserved traits never appear,
-so they can't be adapted. Re-renders only when an adapted value actually changes.
+- **One hook** — `useCambia('your-component')` returns the settings to render with, already
+  personalized, plus an `observe` callback to learn from what the user does.
+- **Only re-renders when something actually changes.**
+- **Private by default** — preferences live on the device; nothing is sent anywhere.
 
-Part of [Cambia](https://github.com/epode-studio/cambia). MIT.
+Part of [Cambia](https://github.com/epode-studio/cambia). Free and open source (MIT).

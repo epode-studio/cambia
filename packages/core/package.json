@@ -1,7 +1,7 @@
 {
   "name": "@epode/cambia-core",
-  "version": "0.1.1",
-  "description": "Cambia core — read, scaffold, and validate the `cambia:` extension inside a DESIGN.md. Framework-zero, no I/O.",
+  "version": "0.1.2",
+  "description": "Read and validate adaptive design-system settings in a DESIGN.md. Core library for Cambia — per-user UI personalization.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,12 +30,13 @@
     "typescript": "^5"
   },
   "keywords": [
+    "adaptive ui",
+    "personalization",
+    "design system",
     "design.md",
-    "design-system",
-    "cambia",
-    "ai",
-    "agents",
-    "adaptive-ui"
+    "design tokens",
+    "tailwind",
+    "validation"
   ],
   "license": "MIT",
   "publishConfig": {

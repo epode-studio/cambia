@@ -703,6 +703,15 @@ function Site({ engine, uid, profile, pid, setPid }) {
         .justify-between{ justify-content:space-between; }
         @keyframes bloomPulse{ 0%,100%{ opacity:.16 } 50%{ opacity:1 } }
         .bloom-cell{ animation-name:bloomPulse; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
+        @keyframes changedPulse{ 0%{ box-shadow:0 0 0 0 rgba(26,54,255,0.5); background:${BLUE_SOFT} } 100%{ box-shadow:0 0 0 6px rgba(26,54,255,0); background:transparent } }
+        .changed{ animation:changedPulse 1.1s ${EASE} both; }
+        @keyframes growBar{ from{ transform:scaleY(0) } to{ transform:scaleY(1) } }
+        .grow-bar{ transform-origin:bottom; animation:growBar .7s ${EASE} both; }
+        @keyframes storyFill{ from{ width:0% } to{ width:100% } }
+        .story-fill{ animation:storyFill linear forwards; }
+        @keyframes popIn{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:translateY(0) } }
+        .pop-in{ animation:popIn .5s ${EASE} both; }
+        @media (prefers-reduced-motion: reduce){ .changed,.grow-bar,.story-fill,.pop-in{ animation:none!important; } }
         @keyframes sampleFade{ from{ opacity:0; transform:translateY(8px) } to{ opacity:1; transform:translateY(0) } }
         .sample-fade{ animation:sampleFade .5s ${EASE} both; }
         .persona-bar{ position:sticky; top:0; z-index:50; background:${BLUE_SOFT}; border-top:1px solid ${INK}; border-bottom:1px solid ${INK}; }

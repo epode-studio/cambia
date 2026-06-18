@@ -1,35 +1,43 @@
-# @epode/cambia-runtime
+# Personalize your UI for each user — automatically and privately
 
-The **live, on-device engine** for [Cambia](https://github.com/epode-studio/cambia). Each
-component starts *born-adapted* to the app's archetype, then **personalizes per user** as you
-feed it the choices they make — while **conserved traits never move**. Nothing is transmitted.
+**`@epode/cambia-runtime`** makes your app's interface **adapt to each person who uses it**. It
+starts every user with a sensible default, then quietly tailors the parts you allow — like
+table density or default sort — based on the choices they actually make. The parts you mark as
+fixed never change, so the app always feels familiar.
+
+Everything happens **on the user's device**. No accounts, no tracking, nothing sent to a server.
 
 ```bash
 npm i @epode/cambia-runtime
 ```
 
-## Usage
+## Quick start
 
 ```ts
 import { createCambia, createLocalStorageStore } from '@epode/cambia-runtime'
 
 const cambia = createCambia({
-  designMd,                          // your DESIGN.md text (with a cambia: block)
-  userId: 'alice',                   // scopes the local, on-device state
-  store: createLocalStorageStore(),  // optional; defaults to in-memory
+  designMd,                          // your DESIGN.md (describes your design system)
+  userId: 'alice',                   // keeps each user's preferences separate
+  store: createLocalStorageStore(),  // saves in the browser; optional
 })
 
 const table = cambia.role('tabular-list')
-table.values()                                    // born-adapted → personalized values
-table.observe({ trait: 'density', value: 'comfortable' })
-// ...after a clear, repeated pattern, values().density switches — for this user only.
 
-cambia.forget()                                   // erase this user's state (GDPR right to erasure)
+table.values()                                    // the settings to render with, tailored to this user
+table.observe({ trait: 'density', value: 'comfortable' })  // tell it what the user chose
+// After a clear, repeated pattern, the table adapts for this user only.
+
+cambia.forget()                                   // erase this user's preferences (e.g. for GDPR)
 ```
 
-How it adapts: a small Dirichlet-multinomial estimate per adaptive trait (prior = born-adapted
-default; observations move it), with an anti-thrash `switchMargin` so one stray signal never
-flips the UI. Conserved traits aren't in the model, so they can't change. See the
-[RFC](https://github.com/epode-studio/cambia/blob/main/docs/RFC-L1-adaptive-runtime.md).
+## Why teams use it
 
-For React, use [`@epode/cambia-react`](https://www.npmjs.com/package/@epode/cambia-react). MIT.
+- **Better UX with zero effort from users** — the interface fits each person over time.
+- **Privacy-friendly** — preferences stay on the device; there's nothing to track or breach, and
+  `forget()` deletes a user's data in one call.
+- **Safe to adopt** — only the parts you opt in can change; your core layout stays put.
+- **Tiny and framework-agnostic** — plain functions; use it anywhere. For React, add
+  [`@epode/cambia-react`](https://www.npmjs.com/package/@epode/cambia-react).
+
+Part of [Cambia](https://github.com/epode-studio/cambia). Free and open source (MIT).

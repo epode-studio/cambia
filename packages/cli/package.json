@@ -1,7 +1,7 @@
 {
   "name": "@epode/cambia",
-  "version": "0.1.1",
-  "description": "Cambia — a DESIGN.md extension that makes a design system role-aware and (optionally) adaptive. A living growth layer on top of DESIGN.md.",
+  "version": "0.1.2",
+  "description": "Make your app UI adapt to each user. CLI for Cambia — adaptive, personalized interfaces built on your design system (DESIGN.md).",
   "type": "module",
   "bin": {
     "cambia": "./bin/cambia.js"
@@ -18,20 +18,21 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@epode/cambia-core": "0.1.1"
+    "@epode/cambia-core": "0.1.2"
   },
   "devDependencies": {
     "@types/node": "^20.19.27",
     "typescript": "^5"
   },
   "keywords": [
+    "adaptive ui",
+    "personalization",
+    "design system",
     "design.md",
-    "design-system",
-    "cambia",
-    "ai",
-    "agents",
-    "adaptive-ui",
-    "cli"
+    "user preferences",
+    "ui personalization",
+    "cli",
+    "tailwind"
   ],
   "license": "MIT",
   "publishConfig": {

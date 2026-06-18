@@ -1,7 +1,7 @@
 {
   "name": "@epode/cambia-runtime",
-  "version": "0.1.1",
-  "description": "Cambia runtime — the live L1 adaptive engine. Born-adapted defaults that personalize per user on-device, never touching conserved traits.",
+  "version": "0.1.2",
+  "description": "Personalize your app UI for each user, automatically and on-device. No tracking. The Cambia adaptive interface engine.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,18 +22,22 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@epode/cambia-core": "0.1.1"
+    "@epode/cambia-core": "0.1.2"
   },
   "devDependencies": {
     "@types/node": "^20.19.27",
     "typescript": "^5"
   },
   "keywords": [
-    "cambia",
-    "design-system",
-    "adaptive-ui",
+    "adaptive ui",
     "personalization",
-    "on-device"
+    "ui personalization",
+    "per-user",
+    "on-device",
+    "privacy",
+    "no tracking",
+    "design system",
+    "user preferences"
   ],
   "license": "MIT",
   "publishConfig": {

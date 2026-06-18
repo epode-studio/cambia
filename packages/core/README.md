@@ -1,31 +1,36 @@
-# @epode/cambia-core
+# Read and validate your adaptive design system config
 
-Framework-zero library to **read, scaffold, and validate** the `cambia:` extension inside a
-[DESIGN.md](https://github.com/google-labs-code/design.md). No filesystem, no process, no I/O —
-pure functions you can embed in CI or your own tooling.
+**`@epode/cambia-core`** is the small, dependency-light library behind
+[Cambia](https://github.com/epode-studio/cambia) — the toolkit that lets your app's interface
+**adapt to each user**. Use this package to read, add, and validate Cambia's settings inside a
+[DESIGN.md](https://github.com/google-labs-code/design.md) file, straight from your own scripts
+or CI. It does no file or network I/O — just plain functions in, results out.
 
 ```bash
 npm i @epode/cambia-core
 ```
 
-## Usage
+## What you can do
 
 ```ts
 import { validate, scaffold } from '@epode/cambia-core'
 
-// Validate (gate CI on it) — returns a result object, never throws on validation problems
-const result = validate(designMdText)
-// → { hasFrontMatter, hasCambia, roleCount, errors[], warnings[], info[] }
+// Check a DESIGN.md is set up correctly (great for a CI step)
+const result = validate(designMdText)   // → { errors, warnings, info, ... }
 if (result.errors.length) process.exit(1)
 
-// Scaffold a cambia: block — non-destructive (comments, formatting, CRLF preserved)
-const { text } = scaffold(designMdText)
+// Add the adaptive settings to a DESIGN.md without touching the rest of the file
+const { text } = scaffold(designMdText) // returns the updated file content
 ```
 
-## Also exported
+Also included:
 
-- `tokensToTailwind(frontMatter)` / `renderTailwindTheme(theme, format)` — DESIGN.md tokens → Tailwind
-- `readFrontMatter` / `writeFrontMatter` / `spliceBlock`
-- `CANONICAL_ROLES`, `guessRole`, `defaultConserved`, `defaultAdaptive`
+- **`tokensToTailwind` / `renderTailwindTheme`** — turn your DESIGN.md design tokens into a
+  Tailwind theme, so colors, spacing and type stay in sync.
+- **`readFrontMatter` / `writeFrontMatter` / `spliceBlock`** — helpers for working with the file.
 
-Part of [Cambia](https://github.com/epode-studio/cambia). MIT.
+Most people use the [command-line tool](https://www.npmjs.com/package/@epode/cambia) or the
+[runtime](https://www.npmjs.com/package/@epode/cambia-runtime) instead; reach for this package
+when you're building your own tooling or CI checks.
+
+Part of [Cambia](https://github.com/epode-studio/cambia). Free and open source (MIT).

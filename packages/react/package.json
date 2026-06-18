@@ -1,7 +1,7 @@
 {
   "name": "@epode/cambia-react",
-  "version": "0.1.1",
-  "description": "React binding for the Cambia runtime — the useCambia hook for born-adapted, self-personalizing UI.",
+  "version": "0.1.2",
+  "description": "React hook to personalize your UI for each user — adaptive interfaces, on-device, no tracking. useCambia().",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,7 +21,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@epode/cambia-runtime": "0.1.1"
+    "@epode/cambia-runtime": "0.1.2"
   },
   "peerDependencies": {
     "react": ">=18"
@@ -32,9 +32,14 @@
     "typescript": "^5"
   },
   "keywords": [
-    "cambia",
     "react",
-    "adaptive-ui",
+    "react hook",
+    "adaptive ui",
+    "personalization",
+    "ui personalization",
+    "usecambia",
+    "per-user",
+    "design system",
     "hooks"
   ],
   "license": "MIT",
